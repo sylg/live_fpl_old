@@ -1,0 +1,37 @@
+<html>
+<head>
+	<title>Live page</title>
+
+
+	<link href="/static/css/bootstrap.css" rel="stylesheet">
+	<script src="http://code.jquery.com/jquery-latest.js"></script>
+	<script src="/static/js/bootstrap.js"></script>
+
+
+	<script src="http://js.pusher.com/1.12/pusher.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+	    // Enable pusher logging - don't include this in production
+	    Pusher.log = function(message) {
+	      if (window.console && window.console.log) window.console.log(message);
+	    };
+
+	    // Flash fallback logging - don't include this in production
+	    WEB_SOCKET_DEBUG = true;
+
+	    var pusher = new Pusher('b2c9525770d59267a6a2');
+	    var channel = pusher.subscribe('test_channel');
+	    channel.bind('chatmessage', function(data) {
+    		console.log(data.message)
+    		// $('#msgbox').prepend('<p>'+data.message[0]+'</p>');
+	    });
+	</script>
+
+
+</head>
+<body>
+<h1>This is the live page</h1>
+<div id="msgbox"></div>
+
+
+</body>
+</html>

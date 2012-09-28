@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<head>
+  <title>liveFPL Test</title>
+
+	<link href="/static/css/bootstrap.css" rel="stylesheet">
+	<script src="http://code.jquery.com/jquery-latest.js"></script>
+	<script src="/static/js/bootstrap.js"></script>
+
+
+
+</head>
+
+
+<body>
+<form action="/">
+	<input type="text" name ="message" placeholder="Type something…">
+	<button type="submit" class="btn" id="submit">Submit</button>
+</form>
+
+
+
+
+
+    <script type=text/javascript>
+      $(function() {
+        $('#submit').submit(function() {
+            $.get(this.action, $(this).serialize(), function(data) {
+                 
+            });
+            return false;
+        });
+      });
+    </script>
+
+
+</body>
+</html>
