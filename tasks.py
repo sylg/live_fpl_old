@@ -15,9 +15,9 @@ pusher.key = "b2c9525770d59267a6a2"
 pusher.secret = "12d6efe3c861e6ce372a"
 p = pusher.Pusher()
 
-r = redis.StrictRedis(host='localhost', port=6379, db=0)
-# redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost')
-# r = redis.from_url(redis_url)
+# r = redis.StrictRedis(host='localhost', port=6379, db=0)
+redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost')
+r = redis.from_url(redis_url)
 
 
 class DictDiffer(object):
