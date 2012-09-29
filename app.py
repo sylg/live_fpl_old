@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import urllib2
 import json
 from celery import Celery
+import os
 
 app = Flask(__name__)
 
@@ -24,29 +25,14 @@ def index():
 
 	return render_template("index.html")
 
-def get_fixture():
-	url = 'http://fantasy.premierleague.com/fixture/49/'
-	response = urllib2.urlopen(url)
-	html = response.read()
-	soup = BeautifulSoup(html)
-	print soup.prettify()
-
-
-
-
-
 
 @app.route("/live", methods=['GET', 'POST'])
 def live():
 	return render_template("live.html")
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
-  p = pusher.Pusher()
-  app.run(debug=True)
+	p = pusher.Pusher()
+	# Bind to PORT if defined, otherwise default to 5000.
+	port = int(os.environ.get('PORT', 5000))
+	app.run(host='0.0.0.0', port=port)
