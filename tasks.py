@@ -56,7 +56,7 @@ def get_fixture_ids():
 			r.lpush('fixture_ids', fixture_id)
 
 
-@periodic_task(run_every=crontab(minute='*' hour='8-22',day_of_week='saturday,sunday,monday,tuesday'))
+@periodic_task(run_every=crontab(minute='*', hour='8-22',day_of_week='saturday,sunday,monday,tuesday'))
 def create_scrapper():
 	if r.llen('fixture_ids') != 0:
 		for ids in r.lrange('fixture_ids',0, -1):
