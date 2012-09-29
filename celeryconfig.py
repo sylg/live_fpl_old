@@ -5,7 +5,7 @@ from tasks import redis_url
 CELERY_TIMEZONE = 'Europe/London'
 
 
-BROKER_URL = 'redis://'
+BROKER_URL = redis_url
 
 # List of modules to import when celery starts.
 CELERY_IMPORTS = ("tasks", )
