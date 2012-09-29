@@ -7,6 +7,7 @@ import pusher
 from bs4 import BeautifulSoup
 import urllib2
 import pickle
+import os
 
 celery = Celery('tasks', backend='redis://', broker='redis://')
 
