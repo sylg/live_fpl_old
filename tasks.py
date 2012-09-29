@@ -16,10 +16,9 @@ pusher.secret = "12d6efe3c861e6ce372a"
 p = pusher.Pusher()
 
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
+# redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost')
+# r = redis.from_url(redis_url)
 
-@celery.task
-def add(x, y):
-    return x + y
 
 class DictDiffer(object):
     def __init__(self, current_dict, past_dict):
@@ -58,8 +57,9 @@ def get_fixture_ids():
 
 @periodic_task(run_every=crontab(minute='*')) #,hour='13-22',day_of_week='saturday,sunday,monday,tuesday'))
 def create_scrapper():
-	for ids in r.lrange('fixture_ids',0, -1):
-		scrapper.delay(ids)
+	if r.llen('fixture_ids') != 0:
+		for ids in r.lrange('fixture_ids',0, -1):
+			scrapper.delay(ids)
 
 @celery.task
 def scrapper(fixture_id):
