@@ -52,11 +52,11 @@ def get_fixture_ids():
 		if r.lrem('fixture_ids', 0, fixture_id) == 0:
 			r.lpush('fixture_ids', fixture_id)
 			r.expire('fixture_ids', 39600)
-			id_updated_msg = 'just add fixture %s' % fixture_id'
+			id_updated_msg = 'just add fixture %s' % fixture_id
 			p['test_channel'].trigger('chatmessage', {'message': id_updated_msg })
 		else:
 			r.lpush('fixture_ids', fixture_id)
-			id_updated_msg = 'just add fixture %s' % fixture_id'
+			id_updated_msg = 'just add fixture %s' % fixture_id
 			p['test_channel'].trigger('chatmessage', {'message': id_updated_msg })
 
 
