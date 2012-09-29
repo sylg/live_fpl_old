@@ -108,9 +108,7 @@ def scrapper(fixture_id):
 			if added:
 				datas_push.append([players[0],added])
 			i += 1
-	else:
-		r.set('data_old:%s' % fixture_id,pickle.dumps(datas))
-		r.expire('data_old:%s' % fixture_id, 432000)
+			p['test_channel'].trigger('chatmessage', {'message': datas_push})
 	#save fresh data as old for next scrapping diff
 	r.set('data_old:%s' % fixture_id,pickle.dumps(datas))
 
