@@ -9,18 +9,22 @@ pusher.secret = "12d6efe3c861e6ce372a"
 p = pusher.Pusher()
 
 
+messages = { 'A': '%s just got an assist',
+			  'GS': '%s just scored a Goal',
+			  'YC':'%s just received a Yellow Card!',
+			  'RC':'%s has been sent off',
+			  'PS':'%s just saved a Penalty',
+			  'PM': '%s just missed a Penalty!',
+			  'OG': '%s just scored an OWN GOAL!',
+}
+
 def push_data(name,keys):
 	for key in keys:
-		if key == 'A':
-			msg = '%s just scored 3pts with an Assist' % name
-			p['test_channel'].trigger('chatmessage', {'message': msg })
-		elif key == 'GS':
-			if int(keys['GS']) > 1:
-				msg = '%s just scored %s goals' %(name, keys['GS'])
-				p['test_channel'].trigger('chatmessage', {'message': msg })
-			else:
-				msg = '%s just scored a Goal' % name
-				p['test_channel'].trigger('chatmessage', {'message': msg })
-		elif key == 'CS' and int(keys['CS']) == 0:
-			msg = 'Clean sheet time for %s!' % name
-			p['test_channel'].trigger('chatmessage', {'message': msg })
+		if key in messages:
+			p['test_channel'].trigger('chatmessage', {'message': messages[key] % name })
+			r.lpush('pushed_data', messages[key] % name)
+
+
+# TODO
+# - Implement multiple goals by same players
+# - Gerer les Cleansheet

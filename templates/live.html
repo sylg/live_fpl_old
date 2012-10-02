@@ -30,7 +30,11 @@
 </head>
 <body>
 <h1>This is the live page</h1>
-<div id="msgbox"></div>
+	<div id="msgbox">
+		{% for update in pushed_data %}
+			<p>{{ update }}</p>
+		{% endfor %}
+	</div>
 
 
 </body>

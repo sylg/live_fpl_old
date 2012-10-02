@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 
 
-
+r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
@@ -15,7 +15,7 @@ def index():
 
 @app.route("/live", methods=['GET', 'POST'])
 def live():
-	return render_template("live.html")
+	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1))
 
 
 if __name__ == '__main__':
