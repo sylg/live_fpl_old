@@ -36,4 +36,3 @@ nosetests.xml
 
 *.db
 
-*.db
