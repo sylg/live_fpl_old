@@ -4,22 +4,30 @@ from bs4 import BeautifulSoup
 import urllib2
 from push import *
 
-def get_fixture_ids():
-	url = 'http://fantasy.premierleague.com/fixtures/5/'
-	response = urllib2.urlopen(url)
-	html = response.read()
-	tablestart = html.find('<div id="ism" class="ism">')
-	tableend = html.find('<aside class="ismAside">')
-	html = html[tablestart:tableend]
-	soup = BeautifulSoup(html)
-	for row in soup.find_all('tr', 'ismFixtureSummary'):
-		fixture_id = str(row.find('a', text="Detailed stats")['data-id'])
-		if r.lrem('fixture_ids', 0, fixture_id) == 0:
-			r.lpush('fixture_ids', fixture_id)
-			r.expire('fixture_ids', 39600)
-		else:
-			r.lpush('fixture_ids', fixture_id)
 
+def get_current_gw():
+	url = 'http://fantasy.premierleague.com/fixtures/7/'
+
+
+def get_fixture_ids():
+	url = 'http://fantasy.premierleague.com/fixtures/7/'
+	response = urllib2.urlopen(url)
+	if response.geturl() == url:
+		html = response.read()
+		tablestart = html.find('<div id="ism" class="ism">')
+		tableend = html.find('<aside class="ismAside">')
+		html = html[tablestart:tableend]
+		soup = BeautifulSoup(html)
+		for row in soup.find_all('tr', 'ismFixtureSummary'):
+			fixture_id = str(row.find('a', text="Detailed stats")['data-id'])
+			if r.lrem('fixture_ids', 0, fixture_id) == 0:
+				r.lpush('fixture_ids', fixture_id)
+			else:
+				r.lpush('fixture_ids', fixture_id)
+	else:
+		print "the FPL is currently being updated, please wait."
+
+	
 
 def create_scrapper():
 	for ids in r.lrange('fixture_ids',0, -1):
@@ -65,7 +73,7 @@ def scrapper(fixture_id):
 		old = r.hgetall(players+':old:%s' %fixture_id)
 		fresh = r.hgetall(players+':fresh:%s' %fixture_id)
 		if dict_diff(old,fresh):
-			push_data(players,dict_diff(old,fresh))
+			push_data(players,dict_diff(old,fresh),fixture_id)
 
 	#Rename fresh data as old for next scrap
 		# r.rename(players+':fresh:%s' %fixture_id, players+':fresh:%s' %fixture_id)
@@ -73,4 +81,5 @@ def scrapper(fixture_id):
 
 
 
+get_fixture_ids()
 scrapper(51)

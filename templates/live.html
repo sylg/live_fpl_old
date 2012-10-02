@@ -3,7 +3,7 @@
 	<title>Live page</title>
 
 
-	<link href="/static/css/bootstrap.css" rel="stylesheet">
+	<link href="/static/css/bootstrap.min.css" rel="stylesheet">
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
 	<script src="/static/js/bootstrap.js"></script>
 
@@ -29,6 +29,18 @@
 
 </head>
 <body>
+	<div class="navbar">
+	  <div class="navbar-inner">
+	    <a class="brand" href="#">LiveFPL</a>
+	    <ul class="nav">
+	      <li class="active"><a href="#">Live</a></li>
+	      <li><a href="#">About</a></li>
+	      <li><a href="#">Contact</a></li>
+	    </ul>
+	  </div>
+	</div>
+<div class="container">
+
 <h1>This is the live page</h1>
 	<div id="msgbox">
 		{% for update in pushed_data %}
@@ -36,6 +48,6 @@
 		{% endfor %}
 	</div>
 
-
+</div>
 </body>
 </html>

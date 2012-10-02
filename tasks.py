@@ -3,61 +3,43 @@ from datetime import timedelta
 from celery.schedules import crontab
 from celery.decorators import periodic_task
 import redis
-import pusher
 from bs4 import BeautifulSoup
 import urllib2
-import pickle
 import os
 
 #redis_url =  'redis://' #os.getenv('REDISTOGO_URL', 'redis://localhost')
 r = redis.StrictRedis(host='localhost', port=6379, db=0) #redis.from_url(redis_url)
 celery = Celery('tasks', backend='redis://', broker='redis://')
 
-pusher.app_id = "28247"
-pusher.key = "b2c9525770d59267a6a2"
-pusher.secret = "12d6efe3c861e6ce372a"
-p = pusher.Pusher()
 
-r = redis.StrictRedis(host='localhost', port=6379, db=0)
-
-
-class DictDiffer(object):
-    def __init__(self, current_dict, past_dict):
-        self.current_dict, self.past_dict = current_dict, past_dict
-        self.set_current, self.set_past = set(current_dict.keys()), set(past_dict.keys())
-        self.intersect = self.set_current.intersection(self.set_past)
-    def added(self):
-        return self.set_current - self.intersect 
-    def removed(self):
-        return self.set_past - self.intersect 
-    def changed(self):
-        return set(o for o in self.intersect if self.past_dict[o] != self.current_dict[o])
-    def unchanged(self):
-        return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
-
-
-
+def dict_diff(dict_a, dict_b):
+    return dict([
+        (key, dict_b.get(key, dict_a.get(key)))
+        for key in set(dict_a.keys()+dict_b.keys())
+        if (
+            (key in dict_a and (not key in dict_b or dict_a[key] != dict_b[key])) or
+            (key in dict_b and (not key in dict_a or dict_a[key] != dict_b[key]))
+        )
+    ])
 
 @periodic_task(run_every=crontab(minute='*/5',hour='8-21',day_of_week='saturday,sunday,monday,tuesday'))
 def get_fixture_ids():
-	url = 'http://fantasy.premierleague.com/fixtures/'
+	url = 'http://fantasy.premierleague.com/fixtures/7/'
 	response = urllib2.urlopen(url)
-	html = response.read()
-	tablestart = html.find('<div id="ism" class="ism">')
-	tableend = html.find('<aside class="ismAside">')
-	html = html[tablestart:tableend]
-	soup = BeautifulSoup(html)
-	for row in soup.find_all('tr', 'ismFixtureSummary'):
-		fixture_id = str(row.find('a', text="Detailed stats")['data-id'])
-		if r.lrem('fixture_ids', 0, fixture_id) == 0:
-			r.lpush('fixture_ids', fixture_id)
-			r.expire('fixture_ids', 39600)
-			id_updated_msg = 'just add fixture %s' % fixture_id
-			p['test_channel'].trigger('chatmessage', {'message': id_updated_msg })
-		else:
-			r.lpush('fixture_ids', fixture_id)
-			id_updated_msg = 'just add fixture %s' % fixture_id
-			p['test_channel'].trigger('chatmessage', {'message': id_updated_msg })
+	if response.geturl() == url:
+		html = response.read()
+		tablestart = html.find('<div id="ism" class="ism">')
+		tableend = html.find('<aside class="ismAside">')
+		html = html[tablestart:tableend]
+		soup = BeautifulSoup(html)
+		for row in soup.find_all('tr', 'ismFixtureSummary'):
+			fixture_id = str(row.find('a', text="Detailed stats")['data-id'])
+			if r.lrem('fixture_ids', 0, fixture_id) == 0:
+				r.lpush('fixture_ids', fixture_id)
+			else:
+				r.lpush('fixture_ids', fixture_id)
+	else:
+		print "the FPL is currently being updated, please wait."
 
 
 @periodic_task(run_every=crontab(minute='*', hour='8-22',day_of_week='saturday,sunday,monday,tuesday'))
@@ -72,47 +54,30 @@ def scrapper(fixture_id):
 	response = urllib2.urlopen(url)
 	html = response.read()
 	soup = BeautifulSoup(html)
-	datas = []
-	datas_push = []
 	for teams in soup.find_all('table'):
-		teamname = teams.find('caption').string
+		teamname = str(teams.find('caption').string)
+
 		for players in teams.find('tbody').find_all('tr'):
 			playername = str(players.td.string.strip())
-			data = {}
-			data['TEAMNAME'] = str(teamname)
+			if r.lrem('lineups:%s' %fixture_id, 0, playername) == 0:
+				r.rpush('lineups:%s' %fixture_id, playername)
+			else:
+				r.rpush('lineups:%s' %fixture_id, playername)
+
+			
+			r.hset(playername+':fresh:'+str(fixture_id),'TEAMNAME',str(teamname))
 			keys = ['MP', 'GS', 'A', 'CS', 'GC', 'OG', 'PS', 'PM', 'YC', 'RC','S', 'B', 'ESP', 'TP']
 			i = 1
 			for key in keys:
-				data[key] = str(players.find_all('td')[i].string.strip())
-				if data[key] == '0':
-					del data[key]
+				r.hset(playername+':fresh:'+str(fixture_id), key, int(players.find_all('td')[i].string.strip()))
 				i += 1
-			datas.append([playername, data])
 
-	#check if 1st scrap do nothing, else do a diff.
-	if r.exists('data_old:%s' %fixture_id):
-		datas_old = pickle.loads(r.get('data_old:%s' % fixture_id))
-		i = 0
-		#start Differential
-		for players in datas:
-			#new stats
-			new_stats = DictDiffer(players[1], datas_old[i][1])
-			added = {}
-			for keys in new_stats.added():
-				added[str(keys)] = players[1][keys]
-				added['TEAMNAME'] = players[1]['TEAMNAME'] 
-			#updated stats
-			for keys in new_stats.changed():
-				if keys == 'MP':
-					print "I'm not doing this"
-				else:
-					added[str(keys)] = players[1][keys]
-			if added:
-				datas_push.append([players[0],added])
-			i += 1
-		p['test_channel'].trigger('chatmessage', {'message': datas_push })
-	#save fresh data as old for next scrapping diff
-	r.set('data_old:%s' % fixture_id,pickle.dumps(datas))
+	#Begin Differential between Scrap & push
+	for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
+		old = r.hgetall(players+':old:%s' %fixture_id)
+		fresh = r.hgetall(players+':fresh:%s' %fixture_id)
+		if dict_diff(old,fresh):
+			push_data(players,dict_diff(old,fresh),fixture_id)
 
-	msg_test = 'I just scrapped this url:%s' %url
-	p['test_channel'].trigger('chatmessage', {'message': msg_test})
+	#Rename fresh data as old for next scrap
+		# r.rename(players+':fresh:%s' %fixture_id, players+':fresh:%s' %fixture_id)

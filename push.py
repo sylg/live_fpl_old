@@ -9,20 +9,21 @@ pusher.secret = "12d6efe3c861e6ce372a"
 p = pusher.Pusher()
 
 
-messages = { 'A': '%s just got an assist',
-			  'GS': '%s just scored a Goal',
-			  'YC':'%s just received a Yellow Card!',
-			  'RC':'%s has been sent off',
-			  'PS':'%s just saved a Penalty',
-			  'PM': '%s just missed a Penalty!',
-			  'OG': '%s just scored an OWN GOAL!',
+messages = { 'A': '%s(%s pts) just got an assist',
+			  'GS': '%s(%s pts) just scored a Goal',
+			  'YC': '%s(%s pts) just received a Yellow Card!',
+			  'RC': '%s(%s pts) has been sent off',
+			  'PS': '%s(%s pts) just saved a Penalty',
+			  'PM': '%s(%s pts) just missed a Penalty!',
+			  'OG': '%s(%s pts) just scored an OWN GOAL!',
 }
 
-def push_data(name,keys):
+def push_data(name,keys,fixture_id):
 	for key in keys:
 		if key in messages:
-			p['test_channel'].trigger('chatmessage', {'message': messages[key] % name })
-			r.lpush('pushed_data', messages[key] % name)
+			msg = messages[key] % (name, r.hget(name+':fresh:'+str(fixture_id),'TP'))
+			p['test_channel'].trigger('chatmessage', {'message': msg })
+			r.lpush('pushed_data', msg)
 
 
 # TODO
