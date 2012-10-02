@@ -9,16 +9,16 @@ import urllib2
 import pickle
 import os
 
-redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost')
-r = redis.from_url(redis_url)
-celery = Celery('tasks', backend=redis_url, broker=redis_url)
+#redis_url =  'redis://' #os.getenv('REDISTOGO_URL', 'redis://localhost')
+r = redis.StrictRedis(host='localhost', port=6379, db=0) #redis.from_url(redis_url)
+celery = Celery('tasks', backend='redis://', broker='redis://')
 
 pusher.app_id = "28247"
 pusher.key = "b2c9525770d59267a6a2"
 pusher.secret = "12d6efe3c861e6ce372a"
 p = pusher.Pusher()
 
-# r = redis.StrictRedis(host='localhost', port=6379, db=0)
+r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
 class DictDiffer(object):
@@ -98,17 +98,19 @@ def scrapper(fixture_id):
 			#new stats
 			new_stats = DictDiffer(players[1], datas_old[i][1])
 			added = {}
-			updated = {}
 			for keys in new_stats.added():
 				added[str(keys)] = players[1][keys]
 				added['TEAMNAME'] = players[1]['TEAMNAME'] 
 			#updated stats
 			for keys in new_stats.changed():
-				added[str(keys)] = players[1][keys]
+				if keys == 'MP':
+					print "I'm not doing this"
+				else:
+					added[str(keys)] = players[1][keys]
 			if added:
 				datas_push.append([players[0],added])
 			i += 1
-			p['test_channel'].trigger('chatmessage', {'message': datas_push})
+		p['test_channel'].trigger('chatmessage', {'message': datas_push })
 	#save fresh data as old for next scrapping diff
 	r.set('data_old:%s' % fixture_id,pickle.dumps(datas))
 

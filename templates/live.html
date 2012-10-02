@@ -21,8 +21,8 @@
 	    var pusher = new Pusher('b2c9525770d59267a6a2');
 	    var channel = pusher.subscribe('test_channel');
 	    channel.bind('chatmessage', function(data) {
-    		console.log(data.message)
-    		// $('#msgbox').prepend('<p>'+data.message[0]+'</p>');
+    		$('<p>'+data.message+'</p>').prependTo('#msgbox').hide();
+    		$('p').show(400);
 	    });
 	</script>
 

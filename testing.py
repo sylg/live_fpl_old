@@ -1,31 +1,12 @@
-from flask import Flask, request, render_template
 import pusher
 import redis
 from bs4 import BeautifulSoup
 import urllib2
-import pickle
-from tasks import scrapper
+from push import *
 
-r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
-pusher.app_id = "28247"
-pusher.key = "b2c9525770d59267a6a2"
-pusher.secret = "12d6efe3c861e6ce372a"
-p = pusher.Pusher()
 
-class DictDiffer(object):
-    def __init__(self, current_dict, past_dict):
-        self.current_dict, self.past_dict = current_dict, past_dict
-        self.set_current, self.set_past = set(current_dict.keys()), set(past_dict.keys())
-        self.intersect = self.set_current.intersection(self.set_past)
-    def added(self):
-        return self.set_current - self.intersect 
-    def removed(self):
-        return self.set_past - self.intersect 
-    def changed(self):
-        return set(o for o in self.intersect if self.past_dict[o] != self.current_dict[o])
-    def unchanged(self):
-        return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
+old_data_test = [['Mannone', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '2', 'OG': '0', 'YC': '0', 'TP': '1', 'S': '1', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Koscielny', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '7', 'OG': '0', 'YC': '0', 'TP': '1', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Vermaelen', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '-2', 'OG': '0', 'YC': '1', 'TP': '0', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Gibbs', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '4', 'OG': '0', 'YC': '0', 'TP': '1', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Jenkinson', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '2', 'OG': '0', 'YC': '0', 'TP': '1', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Walcott', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '1', 'OG': '0', 'YC': '0', 'TP': '1', 'S': '0', 'GC': '0', 'MP': '25', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Diaby', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '6', 'OG': '0', 'YC': '0', 'TP': '1', 'S': '0', 'GC': '0', 'MP': '16', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Ramsey', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '-1', 'OG': '0', 'YC': '1', 'TP': '1', 'S': '0', 'GC': '1', 'MP': '65', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Arteta', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '6', 'OG': '0', 'YC': '0', 'TP': '2', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Chamberlain', {'A': '1', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '8', 'OG': '0', 'YC': '0', 'TP': '5', 'S': '0', 'GC': '1', 'MP': '74', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Gervinho', {'A': '0', 'PS': '0', 'B': '1', 'GS': '1', 'ESP': '20', 'OG': '0', 'YC': '0', 'TP': '8', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Santi Cazorla', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '-9', 'OG': '0', 'YC': '0', 'TP': '2', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Podolski', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '7', 'OG': '0', 'YC': '0', 'TP': '2', 'S': '0', 'GC': '1', 'MP': '66', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Giroud', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '0', 'OG': '0', 'YC': '0', 'TP': '1', 'S': '0', 'GC': '0', 'MP': '24', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Cech', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '14', 'OG': '0', 'YC': '0', 'TP': '3', 'S': '3', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Cahill', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '1', 'OG': '0', 'YC': '0', 'TP': '1', 'S': '0', 'GC': '0', 'MP': '10', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Luiz', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '15', 'OG': '0', 'YC': '1', 'TP': '1', 'S': '0', 'GC': '1', 'MP': '80', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Bertrand', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '1', 'OG': '0', 'YC': '0', 'TP': '1', 'S': '0', 'GC': '0', 'MP': '7', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Terry', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '13', 'OG': '0', 'YC': '0', 'TP': '2', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Ivanovic', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '14', 'OG': '0', 'YC': '0', 'TP': '2', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Cole A', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '14', 'OG': '0', 'YC': '0', 'TP': '2', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Ramires', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '18', 'OG': '0', 'YC': '1', 'TP': '1', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Mikel', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '10', 'OG': '0', 'YC': '0', 'TP': '2', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Mata', {'A': '1', 'PS': '0', 'B': '3', 'GS': '0', 'ESP': '39', 'OG': '0', 'YC': '0', 'TP': '13', 'S': '0', 'GC': '1', 'MP': '83', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Hazard', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '16', 'OG': '0', 'YC': '0', 'TP': '2', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Moses', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '-5', 'OG': '0', 'YC': '0', 'TP': '1', 'S': '0', 'GC': '0', 'MP': '18', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Oscar', {'A': '0', 'PS': '0', 'B': '0', 'GS': '0', 'ESP': '3', 'OG': '0', 'YC': '1', 'TP': '1', 'S': '0', 'GC': '1', 'MP': '72', 'RC': '0', 'CS': '0', 'PM': '0'}], ['Torres', {'A': '0', 'PS': '0', 'B': '2', 'GS': '1', 'ESP': '33', 'OG': '0', 'YC': '0', 'TP': '11', 'S': '0', 'GC': '1', 'MP': '90', 'RC': '0', 'CS': '0', 'PM': '0'}]]
 
 def get_fixture_ids():
 	url = 'http://fantasy.premierleague.com/fixtures/5/'
@@ -49,58 +30,51 @@ def create_scrapper():
 		scrapper.delay(ids)
 
 
+def dict_diff(dict_a, dict_b):
+    return dict([
+        (key, dict_b.get(key, dict_a.get(key)))
+        for key in set(dict_a.keys()+dict_b.keys())
+        if (
+            (key in dict_a and (not key in dict_b or dict_a[key] != dict_b[key])) or
+            (key in dict_b and (not key in dict_a or dict_a[key] != dict_b[key]))
+        )
+    ])
+
+
 def scrapper(fixture_id):
 	url = 'http://fantasy.premierleague.com/fixture/%s/' %fixture_id
 	response = urllib2.urlopen(url)
 	html = response.read()
 	soup = BeautifulSoup(html)
-	datas = []
-	datas_push = []
 	for teams in soup.find_all('table'):
-		teamname = teams.find('caption').string
+		teamname = str(teams.find('caption').string)
+
 		for players in teams.find('tbody').find_all('tr'):
 			playername = str(players.td.string.strip())
-			data = {}
-			data['TEAMNAME'] = str(teamname)
+			if r.lrem('lineups:%s' %fixture_id, 0, playername) == 0:
+				r.rpush('lineups:%s' %fixture_id, playername)
+			else:
+				r.rpush('lineups:%s' %fixture_id, playername)
+
+			
+			r.hset(playername+':fresh:'+str(fixture_id),'TEAMNAME',str(teamname))
 			keys = ['MP', 'GS', 'A', 'CS', 'GC', 'OG', 'PS', 'PM', 'YC', 'RC','S', 'B', 'ESP', 'TP']
 			i = 1
 			for key in keys:
-				data[key] = str(players.find_all('td')[i].string.strip())
-				if data[key] == '0':
-					del data[key]
+				r.hset(playername+':fresh:'+str(fixture_id), key, int(players.find_all('td')[i].string.strip()))
 				i += 1
-			datas.append([playername, data])
 
-	#check if 1st scrap do nothing, else do a diff.
-	if r.exists('data_old:%s' %fixture_id):
-		datas_old = pickle.loads(r.get('data_old:%s' % fixture_id))
-		i = 0
-		#start Differential
-		for players in datas:
-			#new stats
-			new_stats = DictDiffer(players[1], datas_old[i][1])
-			added = {}
-			updated = {}
-			for keys in new_stats.added():
-				added[str(keys)] = players[1][keys]
-				added['TEAMNAME'] = players[1]['TEAMNAME'] 
-			#updated stats
-			for keys in new_stats.changed():
-				added[str(keys)] = players[1][keys]
-			if added:
-				datas_push.append([players[0],added])
-			i += 1
+	#Begin Differential between Scrap & push
+	for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
+		old = r.hgetall(players+':old:%s' %fixture_id)
+		fresh = r.hgetall(players+':fresh:%s' %fixture_id)
+		if dict_diff(old,fresh):
+			push_data(players,dict_diff(old,fresh))
 
-	#save fresh data as old for next scrapping diff
-	r.set('data_old:%s' % fixture_id,pickle.dumps(datas))
-
-	msg_test = 'I just scrapped this url:%s' %url
-	p['test_channel'].trigger('chatmessage', {'message': msg_test})
+	#Rename fresh data as old for next scrap
+		# r.rename(players+':fresh:%s' %fixture_id, players+':fresh:%s' %fixture_id)
 
 
-# 	# nlist = [['Szczesny', {'TEAMNAME': 'Arsenal', 'ESP': '13', 'TP': '2', 'S': '2', 'GC': '1', 'MP': '90'}], ['Vermaelen', {'MP': '90', 'GC': '1','TP': '2', 'TEAMNAME': 'Arsenal', 'ESP': '23'}], ['Gibbs', {'B': '1', 'ESP': '33', 'TP': '3', 'GC': '1', 'TEAMNAME': 'Arsenal', 'MP': '90'}], ['Jenkinson', {'MP': '90', 'GC': '1', 'TP': '2', 'TEAMNAME': 'Arsenal', 'ESP': '17'}], ['Mertesacker', {'MP': '90', 'GC': '1', 'TP': '2', 'TEAMNAME': 'Arsenal', 'ESP': '14'}], ['Walcott', {'MP': '17', 'GS': '1', 'TP': '6', 'TEAMNAME': 'Arsenal', 'ESP': '20'}], ['Ramsey', {'A': '1', 'MP': '24', 'TP': '4', 'TEAMNAME': 'Arsenal', 'ESP': '3'}], ['Arteta', {'A': '1', 'TEAMNAME': 'Arsenal', 'ESP': '21', 'TP': '5', 'GC': '1', 'MP': '90'}], ['Chamberlain', {'MP': '90', 'GC': '1', 'TP': '2', 'TEAMNAME': 'Arsenal', 'ESP': '9'}], ['Coquelin', {'A': '1', 'TEAMNAME': 'Arsenal', 'ESP': '14', 'TP': '5', 'GC': '1', 'MP': '66'}], ['Gervinho', {'B': '3', 'GS': '2', 'ESP': '40', 'TP': '15', 'GC': '1', 'TEAMNAME': 'Arsenal', 'MP': '73'}], ['Santi Cazorla', {'A': '1', 'TEAMNAME': 'Arsenal', 'ESP': '23', 'TP': '5', 'GC': '1', 'MP': '90'}], ['Podolski', {'B': '2', 'GS': '1', 'ESP': '37', 'TP': '8', 'GC': '1', 'TEAMNAME': 'Arsenal', 'MP': '73'}], ['Giroud', {'TEAMNAME': 'Arsenal', 'MP': '17', 'TP': '1', 'ESP': '2'}], ['Davis', {'S': '5', 'GC': '6', 'MP': '90', 'TEAMNAME': 'Southampton', 'ESP': '5'}], ['Fox', {'TEAMNAME': 'Southampton', 'GS': '1', 'ESP': '22', 'TP': '5', 'GC': '6', 'MP': '90'}], ['Hooiveld', {'TEAMNAME': 'Southampton', 'ESP': '1', 'TP': '2', 'GC': '1', 'MP': '27'}], ['Fonte', {'MP': '90', 'GC': '6', 'TP': '-1', 'TEAMNAME': 'Southampton', 'ESP': '10'}], ['Clyne', {'TEAMNAME': 'Southampton', 'ESP': '10', 'GC': '6', 'MP': '90'}], ['Yoshida', {'GC': '5', 'MP': '63', 'TEAMNAME': 'Southampton', 'ESP': '2'}], ['Lallana', {'MP': '90', 'GC': '6', 'TP': '2', 'TEAMNAME': 'Southampton', 'ESP': '4'}], ['Schneiderlin', {'GC': '6', 'TEAMNAME': 'Southampton', 'TP': '2', 'MP': '90'}], ['Puncheon', {'A': '1', 'TEAMNAME': 'Southampton', 'ESP': '8', 'TP': '5', 'GC': '6', 'MP': '90'}], ['Davis', {'MP': '45', 'GC': '4', 'TP': '1', 'TEAMNAME': 'Southampton', 'ESP': '7'}], ['Ward-Prowse', {'MP': '90', 'GC': '6', 'TP': '2', 'TEAMNAME': 'Southampton', 'ESP': '3'}], ['Ramirez', {'MP': '45', 'GC': '2', 'TP': '1', 'TEAMNAME': 'Southampton', 'ESP': '3'}], ['Lambert', {'MP': '75', 'GC': '5', 'TP': '2', 'TEAMNAME': 'Southampton', 'ESP': '-1'}], ['Rodriguez', {'MP': '15', 'GC': '1', 'TP': '1', 'TEAMNAME': 'Southampton', 'ESP': '1'}]]
-# 	# r.set('data_old', pickle.dumps(nlist))
 
 
-get_fixture_ids()
-#create_scrapper()
+scrapper(51)
