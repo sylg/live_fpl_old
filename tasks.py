@@ -6,6 +6,7 @@ import redis
 from bs4 import BeautifulSoup
 import urllib2
 import os
+from push import *
 
 #redis_url =  'redis://' #os.getenv('REDISTOGO_URL', 'redis://localhost')
 r = redis.StrictRedis(host='localhost', port=6379, db=0) #redis.from_url(redis_url)
@@ -24,7 +25,7 @@ def dict_diff(dict_a, dict_b):
 
 @periodic_task(run_every=crontab(minute='*/5',hour='8-21',day_of_week='saturday,sunday,monday,tuesday'))
 def get_fixture_ids():
-	url = 'http://fantasy.premierleague.com/fixtures/7/'
+	url = 'http://fantasy.premierleague.com/fixtures/'
 	response = urllib2.urlopen(url)
 	if response.geturl() == url:
 		html = response.read()
@@ -74,10 +75,12 @@ def scrapper(fixture_id):
 
 	#Begin Differential between Scrap & push
 	for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
-		old = r.hgetall(players+':old:%s' %fixture_id)
-		fresh = r.hgetall(players+':fresh:%s' %fixture_id)
-		if dict_diff(old,fresh):
-			push_data(players,dict_diff(old,fresh),fixture_id)
-
-	#Rename fresh data as old for next scrap
-		# r.rename(players+':fresh:%s' %fixture_id, players+':fresh:%s' %fixture_id)
+		if r.hexists(players+':old:%s' %fixture_id, 'MP') == 1:
+			old = r.hgetall(players+':old:%s' %fixture_id)
+			fresh = r.hgetall(players+':fresh:%s' %fixture_id)
+			if dict_diff(old,fresh):
+				print dict_diff(old,fresh)
+				push_data(players,dict_diff(old,fresh),fixture_id)
+				r.rename(players+':fresh:%s' %fixture_id, players+':old:%s' %fixture_id)
+		else:
+			r.rename(players+':fresh:%s' %fixture_id, players+':old:%s' %fixture_id)

@@ -17,6 +17,11 @@ def index():
 def live():
 	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1))
 
+@app.route("/status",methods=['GET','POST'])
+def status():
+	return r.get('livefpl_status')
+
+
 
 if __name__ == '__main__':
 	# Bind to PORT if defined, otherwise default to 5000.

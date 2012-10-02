@@ -21,9 +21,10 @@ messages = { 'A': '%s(%s pts) just got an assist',
 def push_data(name,keys,fixture_id):
 	for key in keys:
 		if key in messages:
-			msg = messages[key] % (name, r.hget(name+':fresh:'+str(fixture_id),'TP'))
-			p['test_channel'].trigger('chatmessage', {'message': msg })
-			r.lpush('pushed_data', msg)
+			if key != 0:
+				msg = messages[key] % (name, r.hget(name+':fresh:'+str(fixture_id),'TP'))
+				p['test_channel'].trigger('chatmessage', {'message': msg })
+				r.lpush('pushed_data', msg)
 
 
 # TODO

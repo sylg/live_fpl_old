@@ -47,7 +47,14 @@
 			<p>{{ update }}</p>
 		{% endfor %}
 	</div>
+	<div id="status">
+	</div>
 
 </div>
+<script type="text/javascript">
+	$.get('/status', function(data) {
+  $('#status').append(data);
+});
+</script>
 </body>
 </html>

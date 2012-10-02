@@ -5,12 +5,9 @@ import urllib2
 from push import *
 
 
-def get_current_gw():
-	url = 'http://fantasy.premierleague.com/fixtures/7/'
-
 
 def get_fixture_ids():
-	url = 'http://fantasy.premierleague.com/fixtures/7/'
+	url = 'http://fantasy.premierleague.com/fixtures/'
 	response = urllib2.urlopen(url)
 	if response.geturl() == url:
 		html = response.read()
@@ -82,4 +79,3 @@ def scrapper(fixture_id):
 
 
 get_fixture_ids()
-scrapper(51)
