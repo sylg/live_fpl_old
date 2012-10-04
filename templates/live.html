@@ -3,7 +3,7 @@
 	<title>Live page</title>
 
 
-	<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/static/css/bootstrap.css" rel="stylesheet">
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
 	<script src="/static/js/bootstrap.js"></script>
 
@@ -21,8 +21,9 @@
 	    var pusher = new Pusher('b2c9525770d59267a6a2');
 	    var channel = pusher.subscribe('test_channel');
 	    channel.bind('chatmessage', function(data) {
-    		$('<p>'+data.message+'</p>').prependTo('#msgbox').hide();
-    		$('p').show(400);
+    		$(data.message).prependTo('#update').hide();
+    		$('span').tooltip();
+    		$('li').show(400);
 	    });
 	</script>
 
@@ -39,21 +40,22 @@
 	    </ul>
 	  </div>
 	</div>
-<div class="container">
+<div class="container-fluid">
 
 <h1>This is the live page</h1>
-	<div id="msgbox">
-		{% for update in pushed_data %}
-			<p>{{ update }}</p>
-		{% endfor %}
-	</div>
-	<div id="status">
+<h2>The current status is: </h2>
+	<div class="span4">
+		<ul id="update" class="nav nav-tabs nav-stacked">
+		  {% for update in pushed_data %}
+				<li>{{ update }}</li>
+			{% endfor %}
+		</ul>
 	</div>
 
 </div>
 <script type="text/javascript">
 	$.get('/status', function(data) {
-  $('#status').append(data);
+  $('h2').append(data);
 });
 </script>
 </body>

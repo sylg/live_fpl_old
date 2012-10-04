@@ -3762,6 +3762,7 @@ input[type="submit"].btn.btn-mini {
 .nav > li > a:hover {
   text-decoration: none;
   background-color: #eeeeee;
+  cursor:default;
 }
 
 .nav > .pull-right {

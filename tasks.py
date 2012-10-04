@@ -8,9 +8,7 @@ import urllib2
 import os
 from push import *
 
-#redis_url =  'redis://' #os.getenv('REDISTOGO_URL', 'redis://localhost')
-r = redis.StrictRedis(host='localhost', port=6379, db=0) #redis.from_url(redis_url)
-celery = Celery('tasks', backend='redis://', broker='redis://')
+celery = Celery('tasks', broker='redis://')
 
 
 def dict_diff(dict_a, dict_b):
@@ -23,7 +21,7 @@ def dict_diff(dict_a, dict_b):
         )
     ])
 
-@periodic_task(run_every=crontab(minute='*/5',hour='8-21',day_of_week='saturday,sunday,monday,tuesday'))
+@periodic_task(run_every=crontab(minute='*/5',hour='8-21',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
 def get_fixture_ids():
 	url = 'http://fantasy.premierleague.com/fixtures/'
 	response = urllib2.urlopen(url)
@@ -43,13 +41,13 @@ def get_fixture_ids():
 		print "the FPL is currently being updated, please wait."
 
 
-@periodic_task(run_every=crontab(minute='*', hour='8-22',day_of_week='saturday,sunday,monday,tuesday'))
+@periodic_task(run_every=crontab(minute='*', hour='8-22',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
 def create_scrapper():
 	if r.llen('fixture_ids') != 0:
 		for ids in r.lrange('fixture_ids',0, -1):
 			scrapper.delay(ids)
 
-@celery.task
+@celery.task(ignore_result=True)
 def scrapper(fixture_id):
 	url = 'http://fantasy.premierleague.com/fixture/%s/' %fixture_id
 	response = urllib2.urlopen(url)

@@ -8,11 +8,11 @@ CELERY_TIMEZONE = 'Europe/London'
 BROKER_URL = 'redis://localhost:6379/0'
 
 # List of modules to import when celery starts.
-CELERY_IMPORTS = ("tasks", )
+CELERY_IMPORTS = ("tasks" )
 
 ## Using the database to store task state and results.
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+#CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
-#CELERY_REDIS_MAX_CONNECTIONS = 8
-
+CELERY_REDIS_MAX_CONNECTIONS = 4
+BROKER_POOL_LIMIT = 4
 
