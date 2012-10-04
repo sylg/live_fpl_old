@@ -3,7 +3,9 @@
 	<title>Live page</title>
 
 
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link href="/static/css/bootstrap.css" rel="stylesheet">
+	<link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
 	<script src="/static/js/bootstrap.js"></script>
 
@@ -30,33 +32,40 @@
 
 </head>
 <body>
-	<div class="navbar">
-	  <div class="navbar-inner">
-	    <a class="brand" href="#">LiveFPL</a>
-	    <ul class="nav">
-	      <li class="active"><a href="#">Live</a></li>
-	      <li><a href="#">About</a></li>
-	      <li><a href="#">Contact</a></li>
-	    </ul>
-	  </div>
-	</div>
-<div class="container-fluid">
 
-<h1>This is the live page</h1>
-<h2>The current status is: </h2>
-	<div class="span4">
-		<ul id="update" class="nav nav-tabs nav-stacked">
-		  {% for update in pushed_data %}
-				<li>{{ update }}</li>
-			{% endfor %}
-		</ul>
+<div class="navbar navbar-inverse navbar-fixed-top">
+	<div class="navbar-inner">
+		<a class="brand" href="/">LiveFPL</a>
+			<ul class="nav">
+				<li><a href="/live">Refresh</a></li>
+			</ul>
 	</div>
-
 </div>
+
+<div class="container-fluid">
+	<div class="row-fluid">
+		<h2>status is: <span id='status'><span></h2>
+			<ul id="update" class="nav nav-tabs nav-stacked">
+			  {% for update in pushed_data %}
+					<li>{{ update }}</li>
+				{% endfor %}
+			</ul>
+	</div>
+</div>
+
 <script type="text/javascript">
-	$.get('/status', function(data) {
-  $('h2').append(data);
+$.get('/status', function(data) {
+			$('#status').text('')
+			$('#status').append(data)
 });
+window.setInterval(function(){
+		$.get('/status', function(data) {
+			if ( data != $('#status').text()) {
+				$('#status').text('')
+				$('#status').append(data)
+			};
+	});
+}, 5000);
 </script>
 </body>
 </html>

@@ -11,20 +11,22 @@ p = pusher.Pusher()
 
 
 
-messages = { 'A': '<li><a href="#"><span rel="tooltip" title="%s pts" style="color:red;">%s</span> just got an assist</a></li>',
-			  'GS': '%s(%s pts) just scored a Goal',
-			  'YC': '%s(%s pts) just received a Yellow Card!',
-			  'RC': '%s(%s pts) has been sent off',
-			  'PS': '%s(%s pts) just saved a Penalty',
-			  'PM': '%s(%s pts) just missed a Penalty!',
-			  'OG': '%s(%s pts) just scored an OWN GOAL!',
+messages = { 'A': 'just got an assist',
+			  'GS': 'just scored a Goal',
+			  'YC': 'just received a Yellow Card!',
+			  'RC': 'has been sent off',
+			  'PS': 'just saved a Penalty',
+			  'PM': 'just missed a Penalty!',
+			  'OG': 'just scored an OWN GOAL!',
 }
 
 def push_data(name,keys,fixture_id):
+	if r.get('livefpl_status') != 'live':
+		r.set('livefpl_status','live')
 	for key in keys:
 		if key in messages:
 			if key != 0:
-				msg = messages[key] % (r.hget(name+':fresh:'+str(fixture_id),'TP'), name)
+				msg = '<li><a href="#"><span rel="tooltip" title="total point: %s" style="color:red;">%s</span>' % (r.hget(name+':fresh:'+str(fixture_id),'TP'), name) +messages[key]+ '</a></li>'
 				p['test_channel'].trigger('chatmessage', {'message': msg })
 				r.lpush('pushed_data', msg)
 
@@ -32,3 +34,4 @@ def push_data(name,keys,fixture_id):
 # TODO
 # - Implement multiple goals by same players
 # - Gerer les Cleansheet
+

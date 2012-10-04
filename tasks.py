@@ -38,7 +38,7 @@ def get_fixture_ids():
 			else:
 				r.lpush('fixture_ids', fixture_id)
 	else:
-		print "the FPL is currently being updated, please wait."
+		r.set('livefpl_status', 'updating')
 
 
 @periodic_task(run_every=crontab(minute='*', hour='8-22',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
@@ -82,3 +82,8 @@ def scrapper(fixture_id):
 				r.rename(players+':fresh:%s' %fixture_id, players+':old:%s' %fixture_id)
 		else:
 			r.rename(players+':fresh:%s' %fixture_id, players+':old:%s' %fixture_id)
+
+@periodic_task(run_every=crontab(minute='0', hour='0',day_of_week='Friday'),ignore_result=True)
+def cleandb():
+	r.flushall()
+	r.set('livefpl_status','offline')

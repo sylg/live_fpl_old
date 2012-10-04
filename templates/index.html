@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <head>
   <title>liveFPL Test</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link href="/static/css/bootstrap.css" rel="stylesheet">
+  <link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
 	<script src="/static/js/bootstrap.js"></script>
 
@@ -12,26 +13,14 @@
 
 
 <body>
-<form action="/">
-	<input type="text" name ="message" placeholder="Type something…">
-	<button type="submit" class="btn" id="submit">Submit</button>
-</form>
-
-
-
-
-
-    <script type=text/javascript>
-      $(function() {
-        $('#submit').submit(function() {
-            $.get(this.action, $(this).serialize(), function(data) {
-                 
-            });
-            return false;
-        });
-      });
-    </script>
-
-
+    <div class="hero-unit">
+      <h1>LiveFPL</h1>
+      <p>For Mofos eyes only.</p>
+      <p>
+        <a class="btn btn-primary btn-large" href="/live">
+          Live Update Now!
+        </a>
+      </p>
+    </div>
 </body>
 </html>
