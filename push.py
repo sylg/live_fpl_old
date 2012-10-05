@@ -26,7 +26,7 @@ def push_data(name,keys,fixture_id):
 	for key in keys:
 		if key in messages:
 			if key != 0:
-				msg = '<li><a href="#"><span rel="tooltip" title="total point: %s" style="color:red;">%s</span>' % (r.hget(name+':fresh:'+str(fixture_id),'TP'), name) +messages[key]+ '</a></li>'
+				msg = '<li><a href="#"><span rel="tooltip" title="total point: %s" class="player-name">%s</span>' % (r.hget(name+':fresh:'+str(fixture_id),'TP'), name) +messages[key]+ '</a></li>'
 				p['test_channel'].trigger('chatmessage', {'message': msg })
 				r.lpush('pushed_data', msg)
 
