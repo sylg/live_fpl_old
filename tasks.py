@@ -31,8 +31,12 @@ def get_fixture_ids():
 	soup = BeautifulSoup(html)
 	for row in soup.find_all('tr', 'ismFixtureSummary'):
 		fixture_id = int(row.find('a', text="Detailed stats")['data-id'])
-		r.lrem('fixture_ids', 0, fixture_id)
-		r.lpush('fixture_ids', fixture_id)
+		inlist = 0
+		for fid in r.lrange('fixture_ids', 0, 1):
+			if fid == fixture_id:
+				inlist = 1
+		if inlist != 1:
+			r.lpush('fixture_ids', fixture_id)
 
 
 @periodic_task(run_every=crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
