@@ -32,12 +32,11 @@ def push_data(name,keys,fixture_id):
 			print "something different, lets create the msgs"
 			msg = '<li><a href="#"><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (r.hget(name+':fresh:'+str(fixture_id),'TP'), name) +messages[key]+ '</a></li>'
 			p['test_channel'].trigger('chatmessage', {'message': msg })
-			print "i'm pushing data"
-			r.lpush('pushed_data', msg)
+			print "just pushed the data. Backuping the updates"
+			r.lpush('pushed_data', [r.hget(name+':fresh:'+str(fixture_id),'TP'),name,messages[key] ])
 	print "rename all the entries"
 	r.rename(name+':fresh:%s' %fixture_id, name+':old:%s' %fixture_id)
 
 # TODO
 # - Implement multiple goals by same players
 # - Gerer les Cleansheet
-
