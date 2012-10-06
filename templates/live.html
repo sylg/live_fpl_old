@@ -46,6 +46,7 @@
 			<ul id="update" class="nav nav-tabs nav-stacked">
 			  {% for update in pushed_data %}
 			  	{% for data in update %}
+			  	<p style="color:red;">{{ data }}<p>
 					<li><a href="#"><span rel="tooltip" title="total point: {{ data[0] }}" class="player-name">{{ data[1] }}</span>{{ data[2] }}</a></li>
 
 					{% endfor %}
