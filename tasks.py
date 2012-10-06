@@ -75,7 +75,9 @@ def scrapper(fixture_id):
 		if r.hexists(players+':old:%s' %fixture_id, 'MP') == 1:
 			old = r.hgetall(players+':old:%s' %fixture_id)
 			fresh = r.hgetall(players+':fresh:%s' %fixture_id)
-			if dict_diff(old,fresh):
+			if dict_diff(old,fresh) and len(dict_diff(old,fresh)) == 1:
+				print "I dont need to push"
+			else:
 				print "this is the diff"
 				print dict_diff(old,fresh)
 				print "lets push some data"
