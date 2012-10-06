@@ -27,12 +27,9 @@ messages = { 'A': 'just got an assist',
 def push_data(name,keys,fixture_id):
 	for key in keys:
 		if key in messages and keys[key] != 0:
-			print "something different, lets create the msgs"
 			msg = '<li><p><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (r.hget(name+':fresh:'+str(fixture_id),'TP'), name) +messages[key]+ '</p></li>'
 			p['test_channel'].trigger('chatmessage', {'message': msg })
-			print "just pushed the data. Backuping the updates"
-			r.lpush('pushed_data', [r.hget(name+':fresh:'+str(fixture_id),'TP'),name,messages[key] ])
-	print "rename all the entries"
+			r.lpush('pushed_data', msg)
 	r.rename(name+':fresh:%s' %str(fixture_id), name+':old:%s' %str(fixture_id))
 
 # TODO

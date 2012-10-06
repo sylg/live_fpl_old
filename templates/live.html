@@ -52,6 +52,7 @@
 </div>
 
 <script type="text/javascript">
+$('span[rel=tooltip]').tooltip();
 $.get('/status', function(data) {
 			$('#status').text('')
 			$('#status').append(data)
