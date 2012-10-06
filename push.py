@@ -1,5 +1,6 @@
 import pusher
 import redis
+import os
 
 redis_url =  os.getenv('REDISTOGO_URL', 'redis://localhost')
 r = redis.from_url(redis_url) #redis.StrictRedis(host='localhost', port=6379, db=0 )

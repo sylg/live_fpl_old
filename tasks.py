@@ -5,7 +5,6 @@ from celery.decorators import periodic_task
 import redis
 from bs4 import BeautifulSoup
 import urllib2
-import os
 from push import *
 
 celery = Celery('tasks', broker=redis_rul)
