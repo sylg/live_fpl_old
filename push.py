@@ -2,7 +2,7 @@ import pusher
 import redis
 import os
 
-redis_url =  ENV["OPENREDIS_URL"]
+redis_url =  os.getenv('OPENREDIS_URL', 'redis://localhost')
 r = redis.from_url(redis_url) #redis.StrictRedis(host='localhost', port=6379, db=0 )
 
 pusher.app_id = "28247"
