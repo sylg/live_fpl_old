@@ -33,7 +33,7 @@ def push_data(name,keys,fixture_id):
 			print "just pushed the data. Backuping the updates"
 			r.lpush('pushed_data', [r.hget(name+':fresh:'+str(fixture_id),'TP'),name,messages[key] ])
 	print "rename all the entries"
-	r.rename(name+':fresh:%s' %fixture_id, name+':old:%s' %fixture_id)
+	r.rename(name+':fresh:%s' %str(fixture_id), name+':old:%s' %str(fixture_id))
 
 # TODO
 # - Implement multiple goals by same players
