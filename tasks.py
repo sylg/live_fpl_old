@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import urllib2
 from push import *
 
-celery = Celery('tasks', broker=redis_rul)
+celery = Celery('tasks', broker=redis_url)
 
 
 def dict_diff(dict_a, dict_b):
