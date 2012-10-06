@@ -31,11 +31,7 @@ def get_fixture_ids():
 	soup = BeautifulSoup(html)
 	for row in soup.find_all('tr', 'ismFixtureSummary'):
 		fixture_id = int(row.find('a', text="Detailed stats")['data-id'])
-		inlist = 0
-		for fid in r.lrange('fixture_ids', 0, 1):
-			if fid == fixture_id:
-				inlist = 1
-		if inlist != 1:
+		if fixture_id not in r.lrange('fixture_ids',0,-1):
 			r.lpush('fixture_ids', fixture_id)
 
 
