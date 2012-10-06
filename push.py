@@ -21,18 +21,21 @@ messages = { 'A': 'just got an assist',
 			  'PS': 'just saved a Penalty',
 			  'PM': 'just missed a Penalty!',
 			  'OG': 'just scored an OWN GOAL!',
+			  'S': 'just made a save'
 }
 
 def push_data(name,keys,fixture_id):
 	if r.get('livefpl_status') != 'live':
 		r.set('livefpl_status','live')
 	for key in keys:
-		if key in messages:
-			if key != '0':
-				msg = '<li><a href="#"><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (r.hget(name+':fresh:'+str(fixture_id),'TP'), name) +messages[key]+ '</a></li>'
-				p['test_channel'].trigger('chatmessage', {'message': msg })
-				r.lpush('pushed_data', msg)
-
+		if key in messages and key != '0':
+			print "something different, lets create the msgs"
+			msg = '<li><a href="#"><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (r.hget(name+':fresh:'+str(fixture_id),'TP'), name) +messages[key]+ '</a></li>'
+			p['test_channel'].trigger('chatmessage', {'message': msg })
+			print "i'm pushing data"
+			r.lpush('pushed_data', msg)
+	print "rename all the entries"
+	r.rename(name+':fresh:%s' %fixture_id, name+':old:%s' %fixture_id)
 
 # TODO
 # - Implement multiple goals by same players
