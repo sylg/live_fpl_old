@@ -30,7 +30,7 @@ def get_fixture_ids():
 	html = html[tablestart:tableend]
 	soup = BeautifulSoup(html)
 	for row in soup.find_all('tr', 'ismFixtureSummary'):
-		fixture_id = int(row.find('a', text="Detailed stats")['data-id'])
+		fixture_id = row.find('a', text="Detailed stats")['data-id']
 		if fixture_id not in r.lrange('fixture_ids',0,-1):
 			r.lpush('fixture_ids', fixture_id)
 
