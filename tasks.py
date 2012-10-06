@@ -31,8 +31,8 @@ def get_fixture_ids():
 	soup = BeautifulSoup(html)
 	for row in soup.find_all('tr', 'ismFixtureSummary'):
 		fixture_id = str(row.find('a', text="Detailed stats")['data-id'])
-		if r.lrem('fixture_ids', 0, fixture_id) == 0:
-			r.lpush('fixture_ids', fixture_id)
+		r.lrem('fixture_ids', 0, fixture_id)
+		r.lpush('fixture_ids', fixture_id)
 
 
 @periodic_task(run_every=crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
@@ -52,8 +52,8 @@ def scrapper(fixture_id):
 
 		for players in teams.find('tbody').find_all('tr'):
 			playername = str(players.td.string.strip())
-			if r.lrem('lineups:%s' %fixture_id, 0, playername) == 0:
-				r.rpush('lineups:%s' %fixture_id, playername)
+			r.lrem('lineups:%s' %fixture_id, 0, playername)
+			r.rpush('lineups:%s' %fixture_id, playername)
 
 
 			
