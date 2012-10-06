@@ -22,7 +22,7 @@ def get_fixture_ids():
 			else:
 				r.lpush('fixture_ids', fixture_id)
 	else:
-		print "the FPL is currently being updated, please wait."
+		r.set('livefpl_status', 'updating')
 
 	
 
