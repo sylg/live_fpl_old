@@ -71,13 +71,9 @@ def scrapper(fixture_id):
 			fresh = r.hgetall(players+':fresh:%s' %fixture_id)
 			if dict_diff(old,fresh):
 				r.set('livefpl_status','live')
-				print "this is the diff"
-				print dict_diff(old,fresh)
-				print "lets push some data"
 				push_data(players,dict_diff(old,fresh),fixture_id)
 				
 		else:
-			print "first scrap, no need to push anything"
 			r.rename(players+':fresh:%s' %fixture_id, players+':old:%s' %fixture_id)
 
 @periodic_task(run_every=crontab(minute='0', hour='0',day_of_week='Friday'),ignore_result=True)

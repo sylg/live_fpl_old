@@ -8,7 +8,7 @@
 	<link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
 	<script src="/static/js/bootstrap.js"></script>
-
+	<script src="/static/js/classic.js"></script>
 
 	<script src="http://js.pusher.com/1.12/pusher.min.js" type="text/javascript"></script>
 	<script type="text/javascript">
@@ -25,7 +25,7 @@
 	    channel.bind('chatmessage', function(data) {
     		$(data.message).prependTo('#update').hide();
     		$('span').tooltip();
-    		$('li').show(400);
+    		$('li').show(600);
 	    });
 	</script>
 
@@ -40,14 +40,27 @@
 	</div>
 </div>
 
-<div class="container">
-	<div class="row">
-		<h2>status is: <span id='status'><span></h2>
-			<ul id="update" class="nav nav-tabs nav-stacked">
-			  {% for update in pushed_data -%}
-			  	{{ update | safe}}
-				{%- endfor %}
-			</ul>
+<div class="container-fluid">
+	<div class="span8">
+		<h4>Your Classic League</h4>
+		<table class="table table-bordered">
+		</table>
+
+	</div>
+	<div class="span4">
+		<div class="row-fluid">
+		<h4>status is: <span id='status'><span></h4>	
+		</div>
+		<div class="row-fluid">
+					<h4>Ticker</h4>
+					<div style="background-color:lightgrey;height:200px;">
+						<ul id="update" class="nav nav-tabs nav-stacked">
+						  {% for update in pushed_data -%}
+						  	{{ update | safe}}
+							{%- endfor %}
+						</ul>
+				</div>
+		</div>
 	</div>
 </div>
 

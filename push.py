@@ -21,7 +21,7 @@ messages = { 'A': 'just got an assist',
 			  'PS': 'just saved a Penalty',
 			  'PM': 'just missed a Penalty!',
 			  'OG': 'just scored an OWN GOAL!',
-			  'S': 'just made a 3 saves +1pt'
+			  'S': 'just made 3 saves, +1pt'
 }
 
 def push_data(name,keys,fixture_id):
@@ -29,13 +29,14 @@ def push_data(name,keys,fixture_id):
 		if key in messages and keys[key] != 0:
 			msg = '<li><p><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (r.hget(name+':fresh:'+str(fixture_id),'TP'), name) +messages[key]+ '</p></li>'
 			if key == "S":
-				if keys[key] % 3 == 0:
+				if int(keys[key]) % 3 == 0:
 					p['test_channel'].trigger('chatmessage', {'message': msg })
 					r.lpush('pushed_data', msg)
 			else:
 				p['test_channel'].trigger('chatmessage', {'message': msg })
 				r.lpush('pushed_data', msg)
 	r.rename(name+':fresh:%s' %str(fixture_id), name+':old:%s' %str(fixture_id))
+
 
 # TODO
 # - Implement multiple goals by same players

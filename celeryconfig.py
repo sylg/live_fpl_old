@@ -1,7 +1,6 @@
 from datetime import timedelta
 from celery.schedules import crontab
 from push import *
-#from tasks import redis_url 
 
 CELERY_TIMEZONE = 'Europe/London'
 
