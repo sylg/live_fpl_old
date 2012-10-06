@@ -8,7 +8,7 @@ import urllib2
 import os
 from push import *
 
-celery = Celery('tasks', broker='redis://')
+celery = Celery('tasks', broker=redis_rul)
 
 
 def dict_diff(dict_a, dict_b):
