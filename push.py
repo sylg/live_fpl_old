@@ -25,7 +25,6 @@ messages = { 'A': 'just got an assist',
 }
 
 def push_data(name,keys,fixture_id):
-	if r.get('livefpl_status') != 'live':
 	for key in keys:
 		if key in messages and keys[key] != 0:
 			print "something different, lets create the msgs"
