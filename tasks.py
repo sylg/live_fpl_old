@@ -20,7 +20,7 @@ def dict_diff(dict_a, dict_b):
         )
     ])
 
-@periodic_task(run_every=crontab(minute='*/5',hour='10-21',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
+@periodic_task(run_every=crontab(minute='*/1',hour='10-21',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
 def get_fixture_ids():
 	url = 'http://fantasy.premierleague.com/fixtures/'
 	response = urllib2.urlopen(url)
