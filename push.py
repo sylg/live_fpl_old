@@ -30,10 +30,10 @@ def push_data(name,keys,fixture_id):
 			msg = '<li><p><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (r.hget(name+':fresh:'+str(fixture_id),'TP'), name) +messages[key]+ '</p></li>'
 			if key == "S":
 				if int(keys[key]) % 3 == 0:
-					p['test_channel'].trigger('chatmessage', {'message': msg })
+					p['prod_ticker'].trigger('update', {'message': msg })
 					r.lpush('pushed_data', msg)
 			else:
-				p['test_channel'].trigger('chatmessage', {'message': msg })
+				p['prod_ticker'].trigger('update', {'message': msg })
 				r.lpush('pushed_data', msg)
 	r.rename(name+':fresh:%s' %str(fixture_id), name+':old:%s' %str(fixture_id))
 
