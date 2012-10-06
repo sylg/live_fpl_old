@@ -52,8 +52,8 @@ def scrapper(fixture_id):
 
 		for players in teams.find('tbody').find_all('tr'):
 			playername = str(players.td.string.strip())
-			r.lrem('lineups:%s' %fixture_id, 0, playername)
-			r.rpush('lineups:%s' %fixture_id, playername)
+			if playername not in r.lrange('lineups:%s' %fixture_id, 0, -1):
+				r.rpush('lineups:%s' %fixture_id, playername)
 
 
 			
