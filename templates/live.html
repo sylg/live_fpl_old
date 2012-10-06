@@ -45,7 +45,6 @@
 		<h2>status is: <span id='status'><span></h2>
 			<ul id="update" class="nav nav-tabs nav-stacked">
 			  {% for update in pushed_data %}
-					{{ update }}
 					<li><a href="#"><span rel="tooltip" title="total point: {{ update[0] }}" class="player-name">{{ update[1] }}</span>{{ update[2] }}</a></li>
 
 				{% endfor %}
