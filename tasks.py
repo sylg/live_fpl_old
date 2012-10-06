@@ -24,20 +24,17 @@ def dict_diff(dict_a, dict_b):
 def get_fixture_ids():
 	url = 'http://fantasy.premierleague.com/fixtures/'
 	response = urllib2.urlopen(url)
-	if response.geturl() == url:
-		html = response.read()
-		tablestart = html.find('<div id="ism" class="ism">')
-		tableend = html.find('<aside class="ismAside">')
-		html = html[tablestart:tableend]
-		soup = BeautifulSoup(html)
-		for row in soup.find_all('tr', 'ismFixtureSummary'):
-			fixture_id = str(row.find('a', text="Detailed stats")['data-id'])
-			if r.lrem('fixture_ids', 0, fixture_id) == 0:
-				r.lpush('fixture_ids', fixture_id)
-			else:
-				r.lpush('fixture_ids', fixture_id)
-	else:
-		r.set('livefpl_status', 'updating')
+	html = response.read()
+	tablestart = html.find('<div id="ism" class="ism">')
+	tableend = html.find('<aside class="ismAside">')
+	html = html[tablestart:tableend]
+	soup = BeautifulSoup(html)
+	for row in soup.find_all('tr', 'ismFixtureSummary'):
+		fixture_id = str(row.find('a', text="Detailed stats")['data-id'])
+		if r.lrem('fixture_ids', 0, fixture_id) == 0:
+			r.lpush('fixture_ids', fixture_id)
+		else:
+			r.lpush('fixture_ids', fixture_id)
 
 
 @periodic_task(run_every=crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
@@ -75,9 +72,7 @@ def scrapper(fixture_id):
 		if r.hexists(players+':old:%s' %fixture_id, 'MP') == 1:
 			old = r.hgetall(players+':old:%s' %fixture_id)
 			fresh = r.hgetall(players+':fresh:%s' %fixture_id)
-			if dict_diff(old,fresh) and len(dict_diff(old,fresh)) == 1:
-				print "I dont need to push"
-			else:
+			if dict_diff(old,fresh):
 				print "this is the diff"
 				print dict_diff(old,fresh)
 				print "lets push some data"
