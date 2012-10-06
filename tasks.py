@@ -33,8 +33,6 @@ def get_fixture_ids():
 		fixture_id = str(row.find('a', text="Detailed stats")['data-id'])
 		if r.lrem('fixture_ids', 0, fixture_id) == 0:
 			r.lpush('fixture_ids', fixture_id)
-		else:
-			r.lpush('fixture_ids', fixture_id)
 
 
 @periodic_task(run_every=crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
@@ -56,8 +54,7 @@ def scrapper(fixture_id):
 			playername = str(players.td.string.strip())
 			if r.lrem('lineups:%s' %fixture_id, 0, playername) == 0:
 				r.rpush('lineups:%s' %fixture_id, playername)
-			else:
-				r.rpush('lineups:%s' %fixture_id, playername)
+
 
 			
 			r.hset(playername+':fresh:'+str(fixture_id),'TEAMNAME',str(teamname))
@@ -73,6 +70,7 @@ def scrapper(fixture_id):
 			old = r.hgetall(players+':old:%s' %fixture_id)
 			fresh = r.hgetall(players+':fresh:%s' %fixture_id)
 			if dict_diff(old,fresh):
+				r.set('livefpl_status','live')
 				print "this is the diff"
 				print dict_diff(old,fresh)
 				print "lets push some data"
