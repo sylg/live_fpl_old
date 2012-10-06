@@ -43,7 +43,7 @@ def create_scrapper():
 
 @celery.task(ignore_result=True)
 def scrapper(fixture_id):
-	url = 'http://fantasy.premierleague.com/fixture/%s/' %str(fixture_id)
+	url = 'http://fantasy.premierleague.com/fixture/%s/' %fixture_id
 	response = urllib2.urlopen(url)
 	html = response.read()
 	soup = BeautifulSoup(html)
@@ -52,8 +52,8 @@ def scrapper(fixture_id):
 
 		for players in teams.find('tbody').find_all('tr'):
 			playername = str(players.td.string.strip())
-			r.lrem('lineups:%d' %fixture_id, 0, playername)
-			r.rpush('lineups:%d' %fixture_id, playername)
+			r.lrem('lineups:%s' %fixture_id, 0, playername)
+			r.rpush('lineups:%s' %fixture_id, playername)
 
 
 			
@@ -65,10 +65,10 @@ def scrapper(fixture_id):
 				i += 1
 
 	#Begin Differential between Scrap & push
-	for players in r.lrange('lineups:%s' %str(fixture_id), 0, -1):
-		if r.hexists(players+':old:%s' %str(fixture_id, 'MP')) == 1:
-			old = r.hgetall(players+':old:%s' %str(fixture_id))
-			fresh = r.hgetall(players+':fresh:%s' %str(fixture_id))
+	for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
+		if r.hexists(players+':old:%s' %fixture_id, 'MP') == 1:
+			old = r.hgetall(players+':old:%s' %fixture_id)
+			fresh = r.hgetall(players+':fresh:%s' %fixture_id)
 			if dict_diff(old,fresh):
 				r.set('livefpl_status','live')
 				print "this is the diff"
