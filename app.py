@@ -4,7 +4,7 @@ import os
 from push import *
 
 app = Flask(__name__)
-
+r.set('livefpl_status','')
 
 
 @app.route("/", methods=['GET', 'POST'])
