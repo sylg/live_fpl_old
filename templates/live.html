@@ -44,13 +44,11 @@
 	<div class="row-fluid">
 		<h2>status is: <span id='status'><span></h2>
 			<ul id="update" class="nav nav-tabs nav-stacked">
-			  {% for update in pushed_data %}
-			  	{% for data in update %}
-			  	<p style="color:red;">{{ data }}<p>
-					<li><a href="#"><span rel="tooltip" title="total point: {{ data[0] }}" class="player-name">{{ data[1] }}</span>{{ data[2] }}</a></li>
+			  {% for update in pushed_data %-}
+			  	<p style="color:red;">{{ update }}<p>
+					<li><a href="#"><span rel="tooltip" title="total point: {{ update[0] }}" class="player-name">{{ update[1] }}</span>{{ update[2] }}</a></li>
 
-					{% endfor %}
-				{% endfor %}
+				{%- endfor %}
 			</ul>
 	</div>
 </div>
