@@ -5,8 +5,8 @@ from push import *
 CELERY_TIMEZONE = 'Europe/London'
 
 
-#BROKER_URL = 'redis://localhost:6379/0'
-BROKER_URL = redis_url
+BROKER_URL = 'redis://localhost:6379/0'
+#BROKER_URL = redis_url
 
 # List of modules to import when celery starts.
 CELERY_IMPORTS = ("tasks" )

@@ -21,8 +21,8 @@
 	    WEB_SOCKET_DEBUG = true;
 
 	    var pusher = new Pusher('b2c9525770d59267a6a2');
-	    var channel = pusher.subscribe('prod_ticker');
-	    channel.bind('update', function(data) {
+	    var channel = pusher.subscribe('test_channel');
+	    channel.bind('chatmessage', function(data) {
     		$(data.message).prependTo('#update').hide();
     		$('span').tooltip();
     		$('li').show(600);
@@ -44,9 +44,21 @@
 	<div class="span8">
 		<h4>Your Classic League</h4>
 		<table class="table table-bordered">
-			<tr>
-				<td>Auto update league table not yet implemented...</td>
-			</tr>
+			<thead>
+				<tr>
+					<th>Team Name</th>
+					<th rel='tooltip' data-title='Current GW Points'>This GW</th>
+					<th rel='tooltip'data-title='Total Point for this season, including this GW points'>Total Points</th>
+				</tr>
+			</thead>		
+			{% for team in league %}
+				<tr>
+					<td>{{ team[1]['teamname'] }}</td>
+					<td>{{ team[1]['gw_score'] }}</td>
+					<td>{{ team[0] }}</td>
+				</tr>
+			{% endfor %}
+
 		</table>
 
 	</div>
@@ -68,7 +80,8 @@
 </div>
 
 <script type="text/javascript">
-$('span[rel=tooltip]').tooltip();
+$('[rel=tooltip]').tooltip();
+$('th').tooltip();
 $.get('/status', function(data) {
 			$('#status').text('')
 			$('#status').append(data)

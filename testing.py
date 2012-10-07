@@ -13,9 +13,16 @@ def getteams(leagueid):
 	tableend = html.find('</section>')
 	html = html[tablestart:tableend]
 	soup = BeautifulSoup(html)
-	teams = []
-	for team in soup.find_all('tr'):
-		for data in team.find_all('td'):
-			print data.string
+	league = []
 
+	for team in soup.find_all('tr'):
+		if team.find('a') == None:
+			continue
+		teamnanme = str(team.find('a').string)
+		team_id = int(team.a['href'].strip('/').split('/')[1])
+		total_pts = int(team.td.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.string)
+		league.append([total_pts,{'id':team_id, 'teamnanme':teamnanme}])
+
+		
+	print league
 getteams(48483)
