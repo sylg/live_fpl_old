@@ -9,6 +9,7 @@
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
 	<script src="/static/js/bootstrap.js"></script>
 	<script src="/static/js/classic.js"></script>
+	<script src="/static/js/jquery.tableSort.js"></script>
 
 	<script src="http://js.pusher.com/1.12/pusher.min.js" type="text/javascript"></script>
 	<script type="text/javascript">
@@ -45,14 +46,15 @@
 		<h4>Your Classic League</h4>
 		{% if league[0] != 'None'  %}
 
-		<table class="table table-bordered">
+		<table class="table table-bordered" id="xtable">
 			<thead>
 				<tr>
 					<th>Team Name</th>
 					<th rel='tooltip' data-title='Current GW Points'>This GW</th>
 					<th rel='tooltip'data-title='Total Point for this season, including this GW points'>Total Points</th>
 				</tr>
-			</thead>		
+			</thead>
+			<tbody>		
 			{% for team in league %}
 				<tr>
 					<td>{{ team['teamname'] }}</td>
@@ -60,7 +62,7 @@
 					<td>{{ team['totalpts']}} </td>
 				</tr>
 			{% endfor %}
-
+		</tbody>	
 		</table>
 		{% else %}
 		<p>Sorry, your league is not supported by LiveFPL because it has more than 25 players.</p>
@@ -86,6 +88,8 @@
 </div>
 
 <script type="text/javascript">
+//Table sorting $('#xtable').sortTable({onCol:2,sortDesc:true, keepRelationships:true})
+
 $('[rel=tooltip]').tooltip();
 $('th').tooltip();
 $.get('/status', function(data) {
