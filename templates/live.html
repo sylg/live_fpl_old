@@ -43,6 +43,8 @@
 <div class="container-fluid">
 	<div class="span8">
 		<h4>Your Classic League</h4>
+		{% if league[0] != 'None'  %}
+
 		<table class="table table-bordered">
 			<thead>
 				<tr>
@@ -53,14 +55,16 @@
 			</thead>		
 			{% for team in league %}
 				<tr>
-					<td>{{ team[1]['teamname'] }}</td>
-					<td>{{ team[1]['gw_score'] }}</td>
-					<td>{{ team[0] }}</td>
+					<td>{{ team['teamname'] }}</td>
+					<td>{{ team['gwpts'] }}</td>
+					<td>{{ team['totalpts']}} </td>
 				</tr>
 			{% endfor %}
 
 		</table>
-
+		{% else %}
+		<p>Sorry, your league is not supported by LiveFPL because it has more than 25 players.</p>
+		{% endif %}
 	</div>
 	<div class="span4">
 		<div class="row-fluid">
@@ -73,6 +77,8 @@
 						  {% for update in pushed_data -%}
 						  	{{ update | safe}}
 							{%- endfor %}
+						<div>
+						
 						</ul>
 				</div>
 		</div>
