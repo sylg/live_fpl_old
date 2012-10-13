@@ -12,40 +12,29 @@ import json
 app = Flask(__name__)
 r.set('livefpl_status','')
 
-@app.route("/", methods=['GET', 'POST'])
+@app.route("/", methods=['GET'])
 def index():
 	return render_template("index.html")
 
-@app.route("/live", methods=['GET', 'POST'])
+@app.route("/live", methods=['GET'])
 def live():
-	team_id = str(request.args.get('team_id'))
-	if r.exists('team:%s:scraptimer'%team_id) == 1 and r.ttl('team:%s:scraptimer'%team_id) == -1:
-		print "refresh scrap LIVE"
-		add_data(team_id,r.get('currentgw'))
-		r.expire('team:%s:scraptimer'%team_id, 300)
-	elif r.exists('team:%s:scraptimer'%team_id) == 0:
-		print "first scrap LIVE"
-		r.set('team:%s:scraptimer'%team_id, 'true')
-		add_data(team_id,r.get('currentgw'))
-		r.expire('team:%s:scraptimer'%team_id, 300)
-	else:
-		print " i dont need scrapping LIVE"
+	league_id = str(request.args.get('league_id'))
 
 	league = []
-	if r.sismember('league:48483', "toobig") == 0:
-		for team in r.smembers('league:48483'):
+	if r.sismember('league:%s'%league_id, "toobig") == 0:
+		for team in r.smembers('league:%s'%league_id):
 			league.append(r.hgetall('team:%s'%str(team)))
 		league = sorted(league, key=lambda k: k['totalpts'],reverse=True)
 	else:
 		league.append('None')
 
-	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1), league=league,currentgw=r.get('currentgw'), teamid=team_id)
+	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1), league=league,currentgw=r.get('currentgw'))
 
-@app.route("/status",methods=['GET','POST'])
+@app.route("/status",methods=['GET'])
 def status():
 	return r.get('livefpl_status')
 
-@app.route("/getleagues", methods=['GET','POST'])
+@app.route("/getleagues", methods=['GET'])
 def add_to_db():
 	team_id = str(request.args.get('team_id'))
 	if r.exists('team:%s:scraptimer'%team_id) == 1 and r.ttl('team:%s:scraptimer'%team_id) == -1:

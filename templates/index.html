@@ -16,7 +16,10 @@
     <div id="loadScreen" style="display: none;width: 100%; height: 100%; top: 0pt;left: 0pt;">
    <div id="loadScr" style="filter: alpha(opacity = 65);  z-index: 9999;border: medium none; margin: 0pt; padding: 0pt; width: 100%; height: 100%; top: 0pt;left: 0pt; background-color: rgb(0, 0, 0); opacity: 0.2; cursor: wait; position: fixed;"></div>
    <div id="loader"  style="z-index: 10000; position: fixed; padding: 0px; margin: 0px;width: 30%; top: 40%; left: 35%; text-align: center;cursor: wait; ">
-     <p>Loading...</p>
+      <div class="progress progress-success progress-striped active">
+        <div class="bar" style="width: 100%"></div>
+      </div>
+      <p>Please wait while we fetch your team and league information</p>
    </div>
 </div>
     <div class="hero-unit">
@@ -31,15 +34,29 @@
     </div>
 
 
+<!-- Loading modal -->
+<div class="modal hide" id="loading" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-body">
+    <p>Please wait while we fetch your team and league information. This can take a minute or 2. We only do this once.</p>
+    <div class="progress progress-success progress-striped active">
+      <div class="bar" style="width: 100%"></div>
+    </div>
+  </div>
+</div>
+<!-- League pick modal -->
 <div class="modal hide fade" id="leaguepick" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="myModalLabel">Modal header</h3>
+    <h3 id="myModalLabel">Pick the league you want to follow live</h3>
   </div>
   <div class="modal-body">
-    <p>Which league do you want to follow live?</p>
-    <ul class="thumbnails" id="leaguelist">
+    <p>Supported League</p>
+    <ul class="nav nav-tabs nav-stacked" id="league-yes">
     </ul>
+    <p>Unsupported League</p>
+    <ul class="nav nav-tabs nav-stacked" id="league-no">
+    </ul>
+  </div>
   </div>
 </div>
 
@@ -51,29 +68,28 @@
 
 $('#submit').click(function() {
   $(this).toggleClass('loading');
-  $('#loadScreen').show(function(){
+  $('#loading').on('shown',function(){
+
     var team_id = $('#team_id').val()
      $.get('/getleagues?team_id='+team_id, function(data) {
-                $('#loadScreen').remove()
+                $('#leaguepick').modal();
+                $('#loading').modal('hide')
                 $.each(data, function(i, val) {
-                  console.log(i)
-                  console.log(val)
-                  $('#leaguelist').append('<li><a href="/live?league_id='+i+' class="thumbnail" style="text-decoration:none;">'+val.leaguename+'</a></li>');
+                  
+                  if (val.players == 0 ) {
+                      $('#league-no').append('<li><a href="#">'+val.leaguename+'</a></li>')
+                    }
+                  else {
+                     $('#league-yes').append('<li><a href="/live?league_id='+i+'">'+val.leaguename+'</a></li>');
+                  }
                 });
-                // for (var league in data) {
-                //     $('#leaguelist').append('<li><a href="/live?league_id='+league.id+'" class="thumbnail" style="text-decoration:none;">'+league.leaguename+'</a></li>');
-                // }
-
-
-                // $.each(data, function(){
-                // $('#leaguelist').append('<li><a href="/live?league_id='+"44"+'" class="thumbnail" style="text-decoration:none;">'+data.leaguename+'</a></li>')
-                // });
-                $('#leaguepick').modal()
-                console.log(data)
             });
 
   });
-
+  $('#loading').on('hiden', function(){
+    $('#leaguepick').modal();
+  });
+$('#loading').modal('show');
 });
 
 
