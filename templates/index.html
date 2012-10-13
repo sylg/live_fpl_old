@@ -7,6 +7,7 @@
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
 	<script src="/static/js/bootstrap.js"></script>
 
+<script src="http://js.pusher.com/1.12/pusher.min.js" type="text/javascript"></script>
 
 
 </head>
@@ -60,35 +61,33 @@
   </div>
 </div>
 
-
 <script type="text/javascript">
-
-
+    // Flash fallback logging - don't include this in production
+WEB_SOCKET_DEBUG = true;
+var pusher = new Pusher('b2c9525770d59267a6a2');
 
 
 $('#submit').click(function() {
-  $(this).toggleClass('loading');
-  $('#loading').on('shown',function(){
-
-    var team_id = $('#team_id').val()
-     $.get('/getleagues?team_id='+team_id, function(data) {
+    $(this).toggleClass('loading');
+    $('#loading').on('shown',function(){
+        var team_id = $('#team_id').val()
+    
+        $.get('/getleagues?team_id='+team_id, function(data) {
+            var channel = pusher.subscribe(team_id);  
+            channel.bind('league', function(data) {
+                $('#loading').modal('hide');
                 $('#leaguepick').modal();
-                $('#loading').modal('hide')
-                $.each(data, function(i, val) {
-                  
-                  if (val.players == 0 ) {
-                      $('#league-no').append('<li><a href="#">'+val.leaguename+'</a></li>')
+                $.each(data.message, function(i, val) {
+                    if (val.players == 0 ) {
+                        $('#league-no').append('<li><a href="#">'+val.leaguename+'</a></li>')
                     }
-                  else {
-                     $('#league-yes').append('<li><a href="/live?league_id='+i+'">'+val.leaguename+'</a></li>');
-                  }
+                    else {
+                        $('#league-yes').append('<li><a href="/live?league_id='+i+'">'+val.leaguename+'</a></li>');
+                    }
                 });
             });
-
-  });
-  $('#loading').on('hiden', function(){
-    $('#leaguepick').modal();
-  });
+        });
+    });
 $('#loading').modal('show');
 });
 

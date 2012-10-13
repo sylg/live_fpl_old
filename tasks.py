@@ -6,9 +6,10 @@ import redis
 from bs4 import BeautifulSoup
 import urllib2
 from push import *
+from classictable import *
 
 
-celery = Celery('tasks', broker='redis://localhost:6379/0')
+celery = Celery('tasks', broker='redis://localhost:6379/0', backend='redis')
 #celery = Celery('tasks', broker=redis_url)
 
 def dict_diff(dict_a, dict_b):
@@ -81,3 +82,11 @@ def scrapper(fixture_id):
 def cleandb():
 	r.flushall()
 	r.set('livefpl_status','offline')
+
+
+@celery.task(ignore_result=True)
+def add_data_db(team_id):
+	add_data(team_id,r.get('currentgw'))
+	push_league(team_id)
+
+

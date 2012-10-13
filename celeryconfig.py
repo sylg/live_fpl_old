@@ -12,5 +12,5 @@ BROKER_URL = 'redis://localhost:6379/0'
 CELERY_IMPORTS = ("tasks" )
 
 ## Using the database to store task state and results.
-#CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 

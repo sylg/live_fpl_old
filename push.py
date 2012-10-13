@@ -30,12 +30,22 @@ def push_data(name,keys,fixture_id):
 			msg = '<li><p><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (r.hget(name+':fresh:'+str(fixture_id),'TP'), name) +messages[key]+ '</p></li>'
 			if key == "S":
 				if int(keys[key]) % 3 == 0:
-					p['test_channel'].trigger('chatmessage', {'message': msg })
+					p['test_channel'].trigger('ticker', {'message': msg })
 					r.lpush('pushed_data', msg)
 			else:
-				p['test_channel'].trigger('chatmessage', {'message': msg })
+				p['test_channel'].trigger('ticker', {'message': msg })
 				r.lpush('pushed_data', msg)
 	r.rename(name+':fresh:%s' %str(fixture_id), name+':old:%s' %str(fixture_id))
+
+
+
+def push_league(team_id):
+	returned_data = {}
+	for league in r.smembers('team:%s:leagues'%team_id):
+		returned_data[league] = r.hgetall('league:%s:info'%league)
+		
+	p[team_id].trigger('league', {'message': returned_data })
+
 
 
 # TODO

@@ -6,7 +6,7 @@ from collections import OrderedDict
 import urllib2
 from bs4 import BeautifulSoup
 from classictable import *
-import json
+from tasks import *
 
 
 app = Flask(__name__)
@@ -39,12 +39,12 @@ def add_to_db():
 	team_id = str(request.args.get('team_id'))
 	if r.exists('team:%s:scraptimer'%team_id) == 1 and r.ttl('team:%s:scraptimer'%team_id) == -1:
 		print "refresh scrap"
-		add_data(team_id,r.get('currentgw'))
+		add_data_db.delay(team_id)
 		r.expire('team:%s:scraptimer'%team_id, 300)
 	elif r.exists('team:%s:scraptimer'%team_id) == 0:
 		print "first scrap"
 		r.set('team:%s:scraptimer'%team_id, 'true')
-		add_data(team_id,r.get('currentgw'))
+		add_data_db.delay(team_id)
 		r.expire('team:%s:scraptimer'%team_id, 300)
 	else:
 		print " i dont need scrapping"
@@ -54,6 +54,13 @@ def add_to_db():
 		returned_data[league] = r.hgetall('league:%s:info'%league)
 		
 	return jsonify(returned_data)
+
+
+@app.route("/testing", methods=['GET'])
+def test():
+	scrapper = add_data_db.delay()
+	print scrapper.ready()
+	return "good"
 
 
 if __name__ == '__main__':
