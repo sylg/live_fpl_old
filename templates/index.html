@@ -13,16 +13,70 @@
 
 
 <body>
+    <div id="loadScreen" style="display: none;width: 100%; height: 100%; top: 0pt;left: 0pt;">
+   <div id="loadScr" style="filter: alpha(opacity = 65);  z-index: 9999;border: medium none; margin: 0pt; padding: 0pt; width: 100%; height: 100%; top: 0pt;left: 0pt; background-color: rgb(0, 0, 0); opacity: 0.2; cursor: wait; position: fixed;"></div>
+   <div id="loader"  style="z-index: 10000; position: fixed; padding: 0px; margin: 0px;width: 30%; top: 40%; left: 35%; text-align: center;cursor: wait; ">
+     <p>Loading...</p>
+   </div>
+</div>
     <div class="hero-unit">
       <h1>LiveFPL</h1>
       <p>For Mofos eyes only.</p>
-      <p>
-        <a id="Go" class="btn btn-primary btn-large" href="/live?league_id=48483">
-          Live Update Now!
-        </a>
-      </p>
+      <form id="live" class="form-inline">
+        <label>Your Team ID</label>
+          <input id="team_id" type="text" name="team_id" placeholder="ex: 37828">
+          <a class="btn btn-success" id="submit">Go</a>
+        </form>
+
     </div>
-<script>
+
+
+<div class="modal hide fade" id="leaguepick" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">Modal header</h3>
+  </div>
+  <div class="modal-body">
+    <p>Which league do you want to follow live?</p>
+    <ul class="thumbnails" id="leaguelist">
+    </ul>
+  </div>
+</div>
+
+
+<script type="text/javascript">
+
+
+
+
+$('#submit').click(function() {
+  $(this).toggleClass('loading');
+  $('#loadScreen').show(function(){
+    var team_id = $('#team_id').val()
+     $.get('/getleagues?team_id='+team_id, function(data) {
+                $('#loadScreen').remove()
+                $.each(data, function(i, val) {
+                  console.log(i)
+                  console.log(val)
+                  $('#leaguelist').append('<li><a href="/live?league_id='+i+' class="thumbnail" style="text-decoration:none;">'+val.leaguename+'</a></li>');
+                });
+                // for (var league in data) {
+                //     $('#leaguelist').append('<li><a href="/live?league_id='+league.id+'" class="thumbnail" style="text-decoration:none;">'+league.leaguename+'</a></li>');
+                // }
+
+
+                // $.each(data, function(){
+                // $('#leaguelist').append('<li><a href="/live?league_id='+"44"+'" class="thumbnail" style="text-decoration:none;">'+data.leaguename+'</a></li>')
+                // });
+                $('#leaguepick').modal()
+                console.log(data)
+            });
+
+  });
+
+});
+
+
 </script>
 </body>
 </html>

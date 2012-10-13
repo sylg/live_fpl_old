@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import urllib2
 from push import *
 
+
 celery = Celery('tasks', broker='redis://localhost:6379/0')
 #celery = Celery('tasks', broker=redis_url)
 

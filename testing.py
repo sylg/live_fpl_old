@@ -31,7 +31,46 @@ def getteams(leagueid):
 		r.sadd('league:%s'%leagueid,"toobig")
 		
 
-getteams(29613)
+def getlineup(teamid, gw):
+	url = "http://fantasy.premierleague.com/entry/%s/event-history/%s/#ismDataView" % (teamid, gw)
+	response = urllib2.urlopen(url)
+	html = response.read()
+	tablestart = html.find('<tbody id="ismDataElements">')
+	tableend = html.find('<!-- sponsor -->')
+	html = html[tablestart:tableend]
+	soup = BeautifulSoup(html)
+	for row in soup.find_all('tr'):
+		r.hset('team:%s:lineup'%teamid,str(row.td.string), 0) 
+	
+
+def get_classic_leagues(teamid,current_gw):
+	url = "http://fantasy.premierleague.com/entry/%s/event-history/%s/" % (teamid, current_gw)
+	response = urllib2.urlopen(url)
+	html = response.read()
+	tablestart = html.find('<h2 class="ismTableHeading">Classic leagues</h2>')
+	tableend = html.find('<h2 class="ismTableHeading">Head-to-Head leagues</h2>')
+	html = html[tablestart:tableend]
+	soup = BeautifulSoup(html)
+
+	for leagueid in soup.find_all('a'):
+		leagueurl = leagueid.get('href')
+		r.hset('team:%s:cleagues'%teamid,str(leagueid.get_text().strip()), str(leagueurl.strip('/').split('/')[1]))
+
+
+def add_data(teamid,current_gw):
+	get_classic_leagues(teamid, current_gw)
+	for league in r.hvals('team:%s:cleagues'%teamid):
+		getteams(league)
+		if r.sismember('league:%s'%league, "toobig") == 0:
+			for team in r.smembers('league:%s'%league):
+				getlineup(team,current_gw)
+				get_classic_leagues(team,current_gw)
+
+
+
+add_data(37828, r.get('currentgw'))
+
+
 
 
 # for team in r.smembers('league:29613'):
