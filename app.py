@@ -46,14 +46,14 @@ def add_to_db():
 		r.set('team:%s:scraptimer'%team_id, 'true')
 		add_data_db.delay(team_id)
 		r.expire('team:%s:scraptimer'%team_id, 300)
-	else:
-		print " i dont need scrapping"
+	elif r.exists('team:%s:leagues'%team_id) == 1:
+		returned_data = {}
+		for league in r.smembers('team:%s:leagues'%team_id):
+			returned_data[league] = r.hgetall('league:%s:info'%league)
+		return jsonify(returned_data)
 	
-	returned_data = {}
-	for league in r.smembers('team:%s:leagues'%team_id):
-		returned_data[league] = r.hgetall('league:%s:info'%league)
+	return "None"
 		
-	return jsonify(returned_data)
 
 
 @app.route("/testing", methods=['GET'])

@@ -36,7 +36,7 @@
 
 
 <!-- Loading modal -->
-<div class="modal hide" id="loading" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal hide" id="loading" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="static">
   <div class="modal-body">
     <p>Please wait while we fetch your team and league information. This can take a minute or 2. We only do this once.</p>
     <div class="progress progress-success progress-striped active">
@@ -45,7 +45,7 @@
   </div>
 </div>
 <!-- League pick modal -->
-<div class="modal hide fade" id="leaguepick" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal hide fade" id="leaguepick" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="static">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
     <h3 id="myModalLabel">Pick the league you want to follow live</h3>
@@ -73,6 +73,23 @@ $('#submit').click(function() {
         var team_id = $('#team_id').val()
     
         $.get('/getleagues?team_id='+team_id, function(data) {
+            console.log(data)
+            if (data != "None") {
+                $('#loading').modal('hide');
+                $('#leaguepick').modal();
+                $.each(data, function(i, val) {
+                    if (val.players == 0 ) {
+                        $('#league-no').append('<li><a href="#">'+val.leaguename+'</a></li>')
+                    }
+                    else {
+                        $('#league-yes').append('<li><a href="/live?league_id='+i+'">'+val.leaguename+'</a></li>');
+                    }
+                }); 
+            }
+            else{
+
+            }
+
             var channel = pusher.subscribe(team_id);  
             channel.bind('league', function(data) {
                 $('#loading').modal('hide');

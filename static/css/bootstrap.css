@@ -4900,6 +4900,7 @@ input[type="submit"].btn.btn-mini {
 }
 
 .modal {
+  outline: none;
   position: fixed;
   top: 50%;
   left: 50%;
