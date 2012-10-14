@@ -3,7 +3,6 @@ import redis
 import os
 from push import *
 from collections import OrderedDict
-import urllib2
 from bs4 import BeautifulSoup
 from classictable import *
 from tasks import *
@@ -19,16 +18,22 @@ def index():
 @app.route("/live", methods=['GET'])
 def live():
 	league_id = str(request.args.get('league_id'))
+	team_id = str(request.args.get('team_id'))
+	leagues = []
+	for league in r.smembers('team:%s:leagues'%team_id):
+		leagues.append([league,r.hgetall('league:%s:info'%league)])
 
-	league = []
+	league_data = []
 	if r.sismember('league:%s'%league_id, "toobig") == 0:
 		for team in r.smembers('league:%s'%league_id):
-			league.append(r.hgetall('team:%s'%str(team)))
-		league = sorted(league, key=lambda k: k['totalpts'],reverse=True)
+			league_data.append(r.hgetall('team:%s'%str(team)))
+		league_data = sorted(league_data, key=lambda k: k['totalpts'],reverse=True)
 	else:
-		league.append('None')
+		league_data.append('None')
 
-	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1), league=league,currentgw=r.get('currentgw'))
+	leaguename = r.hget('league:%s:info'%league_id, 'leaguename')
+
+	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1), league_data=league_data,currentgw=r.get('currentgw'), team_id=team_id,leagues=leagues, leaguename=leaguename)
 
 @app.route("/status",methods=['GET'])
 def status():
@@ -41,16 +46,26 @@ def add_to_db():
 		print "refresh scrap"
 		add_data_db.delay(team_id)
 		r.expire('team:%s:scraptimer'%team_id, 300)
+	elif r.exists('team:%s:leagues'%team_id) == 1 and r.exists('team:%s:scraptimer'%team_id) == 0:
+		print "data already available"
+		r.set('team:%s:scraptimer'%team_id, 'true')
+		r.expire('team:%s:scraptimer'%team_id, 300)
+		returned_data = {}
+		for league in r.smembers('team:%s:leagues'%team_id):
+			returned_data[league] = r.hgetall('league:%s:info'%league)
+		return jsonify(returned_data)
+	elif r.exists('team:%s:leagues'%team_id) == 1:
+		print "data already available"
+		returned_data = {}
+		for league in r.smembers('team:%s:leagues'%team_id):
+			returned_data[league] = r.hgetall('league:%s:info'%league)
+		return jsonify(returned_data)
+
 	elif r.exists('team:%s:scraptimer'%team_id) == 0:
 		print "first scrap"
 		r.set('team:%s:scraptimer'%team_id, 'true')
 		add_data_db.delay(team_id)
 		r.expire('team:%s:scraptimer'%team_id, 300)
-	elif r.exists('team:%s:leagues'%team_id) == 1:
-		returned_data = {}
-		for league in r.smembers('team:%s:leagues'%team_id):
-			returned_data[league] = r.hgetall('league:%s:info'%league)
-		return jsonify(returned_data)
 	
 	return "None"
 		

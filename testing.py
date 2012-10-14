@@ -1,8 +1,10 @@
 import pusher
 import redis
 from bs4 import BeautifulSoup
-import urllib2
 from push import *
+import requests
+
+headers = {'User-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'}
 
 
 def getteams(leagueid):
@@ -33,8 +35,8 @@ def getteams(leagueid):
 
 def getlineup(teamid, gw):
 	url = "http://fantasy.premierleague.com/entry/%s/event-history/%s/#ismDataView" % (teamid, gw)
-	response = urllib2.urlopen(url)
-	html = response.read()
+	response = requests.get(url, headers=headers)
+	html = response.text
 	tablestart = html.find('<tbody id="ismDataElements">')
 	tableend = html.find('<!-- sponsor -->')
 	html = html[tablestart:tableend]
@@ -45,7 +47,7 @@ def getlineup(teamid, gw):
 
 def get_classic_leagues(teamid,current_gw):
 	url = "http://fantasy.premierleague.com/entry/%s/event-history/%s/" % (teamid, current_gw)
-	response = urllib2.urlopen(url)
+	response = requests.get(url)
 	html = response.read()
 	tablestart = html.find('<h2 class="ismTableHeading">Classic leagues</h2>')
 	tableend = html.find('<h2 class="ismTableHeading">Head-to-Head leagues</h2>')
@@ -68,7 +70,7 @@ def add_data(teamid,current_gw):
 
 
 
-add_data(37828, r.get('currentgw'))
+getlineup(37828,7)
 
 
 

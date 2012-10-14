@@ -39,15 +39,24 @@
     <a href="#" class="btn btn-success">Refresh</a>
     <ul class="nav">
 
-      <li><a href="#">Leagues</a></li>
+    	<li class="dropdown"><a id="leagues" href="#"  class="dropdown-toggle" data-toggle="dropdown">Leagues <b class="caret"></b></a>
+    		<ul class="dropdown-menu">
+    			{% for league in leagues %}
+    				{% if league[1]['players'] != '0' %}
+    					<li><a href="/live?league_id={{league[0]}}&team_id={{team_id}}">{{ league[1]['leaguename'] }}</a></li>
+    				{% else %}
+    				{% endif %}
+    			{% endfor %}
+    		</ul>
+    	</li>
     </ul>
   </div>
 </div>
 
 <div class="container-fluid">
 	<div class="span8">
-		<h4>Your Classic League</h4>
-		{% if league[0] != 'None'  %}
+		<h4>{{ leaguename }}</h4>
+		{% if league_data[0] != 'None'  %}
 
 		<table class="table table-bordered" id="xtable">
 			<thead>
@@ -58,7 +67,7 @@
 				</tr>
 			</thead>
 			<tbody>		
-			{% for team in league %}
+			{% for team in league_data %}
 				<tr>
 					<td>{{ team['teamname'] }}</td>
 					<td>{{ team['gwpts'] }}</td>
@@ -91,6 +100,11 @@
 </div>
 
 <script type="text/javascript">
+
+
+
+
+
 //Table sorting $('#xtable').sortTable({onCol:2,sortDesc:true, keepRelationships:true})
 
 $('[rel=tooltip]').tooltip();

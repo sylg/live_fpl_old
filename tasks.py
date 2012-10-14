@@ -4,7 +4,7 @@ from celery.schedules import crontab
 from celery.decorators import periodic_task
 import redis
 from bs4 import BeautifulSoup
-import urllib2
+import requests
 from push import *
 from classictable import *
 
@@ -25,8 +25,8 @@ def dict_diff(dict_a, dict_b):
 @periodic_task(run_every=crontab(minute='*/1',hour='10-21',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
 def get_fixture_ids():
 	url = 'http://fantasy.premierleague.com/fixtures/'
-	response = urllib2.urlopen(url)
-	html = response.read()
+	response = requests.get(url, headers=headers)
+	html = response.text
 	tablestart = html.find('<div id="ism" class="ism">')
 	tableend = html.find('<aside class="ismAside">')
 	html = html[tablestart:tableend]
@@ -46,8 +46,8 @@ def create_scrapper():
 @celery.task(ignore_result=True)
 def scrapper(fixture_id):
 	url = 'http://fantasy.premierleague.com/fixture/%s/' %fixture_id
-	response = urllib2.urlopen(url)
-	html = response.read()
+	response = requests.get(url, headers=headers)
+	html = response.text
 	soup = BeautifulSoup(html)
 	for teams in soup.find_all('table'):
 		teamname = str(teams.find('caption').string)

@@ -38,7 +38,7 @@
 <!-- Loading modal -->
 <div class="modal hide" id="loading" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="static">
   <div class="modal-body">
-    <p>Please wait while we fetch your team and league information. This can take a minute or 2. We only do this once.</p>
+    <p>Please wait while we fetch your team and league information. This can take a minute or 2. We only do this once. All further updare are in <strong>real time!</strong></p>
     <div class="progress progress-success progress-striped active">
       <div class="bar" style="width: 100%"></div>
     </div>
@@ -82,7 +82,7 @@ $('#submit').click(function() {
                         $('#league-no').append('<li><a href="#">'+val.leaguename+'</a></li>')
                     }
                     else {
-                        $('#league-yes').append('<li><a href="/live?league_id='+i+'">'+val.leaguename+'</a></li>');
+                        $('#league-yes').append('<li><a href="/live?league_id='+i+'&team_id='+team_id+'">'+val.leaguename+'</a></li>');
                     }
                 }); 
             }
@@ -95,11 +95,13 @@ $('#submit').click(function() {
                 $('#loading').modal('hide');
                 $('#leaguepick').modal();
                 $.each(data.message, function(i, val) {
+                    var notsupprted = 0;
                     if (val.players == 0 ) {
                         $('#league-no').append('<li><a href="#">'+val.leaguename+'</a></li>')
+                        notsupprted ++;
                     }
                     else {
-                        $('#league-yes').append('<li><a href="/live?league_id='+i+'">'+val.leaguename+'</a></li>');
+                        $('#league-yes').append('<li><a href="/live?league_id='+i+'&team_id='+team_id+'">'+val.leaguename+'</a></li>');
                     }
                 });
             });
