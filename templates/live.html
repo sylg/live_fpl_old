@@ -68,11 +68,19 @@
 			</thead>
 			<tbody>		
 			{% for team in league_data %}
-				<tr>
-					<td>{{ team['teamname'] }}</td>
-					<td>{{ team['gwpts'] }}</td>
-					<td>{{ team['totalpts']}} </td>
-				</tr>
+				{% if team['id'] == team_id %}
+					<tr class="my-team">
+						<td>{{ team['teamname'] }}</td>
+						<td>{{ team['gwpts'] }}</td>
+						<td>{{ team['totalpts']}} </td>
+					</tr>
+				{% else %}
+					<tr>
+						<td>{{ team['teamname'] }}</td>
+						<td>{{ team['gwpts'] }}</td>
+						<td>{{ team['totalpts']}} </td>
+					</tr>
+				{% endif %}
 			{% endfor %}
 		</tbody>	
 		</table>

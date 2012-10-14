@@ -38,7 +38,7 @@
 <!-- Loading modal -->
 <div class="modal hide" id="loading" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="static">
   <div class="modal-body">
-    <p>Please wait while we fetch your team and league information. This can take a minute or 2. We only do this once. All further updare are in <strong>real time!</strong></p>
+    <p>Please wait while we fetch your team and league information. This can take a minute or 2. We only do this once. All further updates are in <strong>real time!</strong></p>
     <div class="progress progress-success progress-striped active">
       <div class="bar" style="width: 100%"></div>
     </div>
@@ -51,10 +51,8 @@
     <h3 id="myModalLabel">Pick the league you want to follow live</h3>
   </div>
   <div class="modal-body">
-    <p>Supported League</p>
     <ul class="nav nav-tabs nav-stacked" id="league-yes">
     </ul>
-    <p>Unsupported League</p>
     <ul class="nav nav-tabs nav-stacked" id="league-no">
     </ul>
   </div>
@@ -73,7 +71,6 @@ $('#submit').click(function() {
         var team_id = $('#team_id').val()
     
         $.get('/getleagues?team_id='+team_id, function(data) {
-            console.log(data)
             if (data != "None") {
                 $('#loading').modal('hide');
                 $('#leaguepick').modal();
@@ -94,8 +91,8 @@ $('#submit').click(function() {
             channel.bind('league', function(data) {
                 $('#loading').modal('hide');
                 $('#leaguepick').modal();
+                var notsupprted = 0;
                 $.each(data.message, function(i, val) {
-                    var notsupprted = 0;
                     if (val.players == 0 ) {
                         $('#league-no').append('<li><a href="#">'+val.leaguename+'</a></li>')
                         notsupprted ++;
@@ -104,6 +101,10 @@ $('#submit').click(function() {
                         $('#league-yes').append('<li><a href="/live?league_id='+i+'&team_id='+team_id+'">'+val.leaguename+'</a></li>');
                     }
                 });
+                if ( notsupprted > 0) {
+                        $('#league-no').before('<p>Unsupported League</p>');
+                        $('#league-yes').before('<p>Supported League</p>')
+                    }
             });
         });
     });
