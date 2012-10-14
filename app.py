@@ -9,7 +9,6 @@ from tasks import *
 
 
 app = Flask(__name__)
-r.set('livefpl_status','')
 
 @app.route("/", methods=['GET'])
 def index():

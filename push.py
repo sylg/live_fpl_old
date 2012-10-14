@@ -13,7 +13,6 @@ pusher.secret = "12d6efe3c861e6ce372a"
 p = pusher.Pusher()
 
 
-
 messages = { 'A': 'just got an assist',
 			  'GS': 'just scored a Goal',
 			  'YC': 'just received a Yellow Card!',
@@ -37,17 +36,11 @@ def push_data(name,keys,fixture_id):
 				r.lpush('pushed_data', msg)
 	r.rename(name+':fresh:%s' %str(fixture_id), name+':old:%s' %str(fixture_id))
 
-
-
 def push_league(team_id):
 	returned_data = {}
 	for league in r.smembers('team:%s:leagues'%team_id):
 		returned_data[league] = r.hgetall('league:%s:info'%league)
-		
 	p[team_id].trigger('league', {'message': returned_data })
 
-
-
 # TODO
-# - Implement multiple goals by same players
 # - Gerer les Cleansheet

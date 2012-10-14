@@ -43,7 +43,11 @@
     		<ul class="dropdown-menu">
     			{% for league in leagues %}
     				{% if league[1]['players'] != '0' %}
-    					<li><a href="/live?league_id={{league[0]}}&team_id={{team_id}}">{{ league[1]['leaguename'] }}</a></li>
+    					{% if league[1]['type'] == 'classic' %}
+    						<li><a href="/live?league_id={{league[0]}}&team_id={{team_id}}">{{ league[1]['leaguename'] }} (Classic)</a></li>
+    					{% else %}
+    						<li><a href="/live?league_id={{league[0]}}&team_id={{team_id}}">{{ league[1]['leaguename'] }} (H2H)</a></li>
+    				{% endif %}
     				{% else %}
     				{% endif %}
     			{% endfor %}
@@ -94,7 +98,7 @@
 		</div>
 		<div class="row-fluid">
 					<h4>Ticker</h4>
-					<div style="background-color:lightgrey;height:200px;overflow-y:scroll;">
+					<div style="background-color:#F8E4E4;height:186px;overflow-y:scroll;">
 						<ul id="update" class="nav nav-tabs nav-stacked">
 						  {% for update in pushed_data -%}
 						  	{{ update | safe}}
@@ -108,18 +112,20 @@
 </div>
 
 <script type="text/javascript">
-
-
-
+$(document).ready(function(){
+	$('[rel=tooltip]').tooltip();
+	$.get('/status', function(data) {
+		console.log(data)
+		$('#status').text('')
+		$('#status').append(data)
+	});
+});
 
 
 //Table sorting $('#xtable').sortTable({onCol:2,sortDesc:true, keepRelationships:true})
 
-$('[rel=tooltip]').tooltip();
-$.get('/status', function(data) {
-			$('#status').text('')
-			$('#status').append(data)
-});
+
+// Check for status update
 window.setInterval(function(){
 		$.get('/status', function(data) {
 			if ( data != $('#status').text()) {

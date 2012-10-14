@@ -5854,7 +5854,11 @@ font-size: 180%;
 
 .my-team {
     background-color:rgba(44, 255, 69, 0.37);
-    
-
 }
 
+#update p:hover {
+  background-color: #eeeeee;
+}
+#update p {
+  margin-right: 0;
+}
