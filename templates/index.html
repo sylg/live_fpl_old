@@ -29,7 +29,7 @@
       <form id="live" class="form-inline">
         <label>Your Team ID</label>
           <input id="team_id" type="text" name="team_id" placeholder="ex: 37828">
-          <a class="btn btn-success" id="submit">Go</a>
+          <button class="btn btn-success" id="submit">Go</button>
         </form>
 
     </div>
@@ -64,8 +64,7 @@
 WEB_SOCKET_DEBUG = true;
 var pusher = new Pusher('b2c9525770d59267a6a2');
 
-
-$('#submit').click(function() {
+$('#live').submit(function(){
     $(this).toggleClass('loading');
     $('#loading').on('shown',function(){
         var team_id = $('#team_id').val()
@@ -108,8 +107,56 @@ $('#submit').click(function() {
             });
         });
     });
-$('#loading').modal('show');
+    $('#loading').modal('show');
+    return false;
 });
+
+
+// $('#submit').click(function() {
+//     $(this).toggleClass('loading');
+//     $('#loading').on('shown',function(){
+//         var team_id = $('#team_id').val()
+    
+//         $.get('/getleagues?team_id='+team_id, function(data) {
+//             if (data != "None") {
+//                 $('#loading').modal('hide');
+//                 $('#leaguepick').modal();
+//                 $.each(data, function(i, val) {
+//                     if (val.players == 0 ) {
+//                         $('#league-no').append('<li><a href="#">'+val.leaguename+'</a></li>')
+//                     }
+//                     else {
+//                         $('#league-yes').append('<li><a href="/live?league_id='+i+'&team_id='+team_id+'">'+val.leaguename+'</a></li>');
+//                     }
+//                 }); 
+//             }
+//             else{
+
+//             }
+
+//             var channel = pusher.subscribe(team_id);  
+//             channel.bind('league', function(data) {
+//                 $('#loading').modal('hide');
+//                 $('#leaguepick').modal();
+//                 var notsupprted = 0;
+//                 $.each(data.message, function(i, val) {
+//                     if (val.players == 0 ) {
+//                         $('#league-no').append('<li><a href="#">'+val.leaguename+'</a></li>')
+//                         notsupprted ++;
+//                     }
+//                     else {
+//                         $('#league-yes').append('<li><a href="/live?league_id='+i+'&team_id='+team_id+'">'+val.leaguename+'</a></li>');
+//                     }
+//                 });
+//                 if ( notsupprted > 0) {
+//                         $('#league-no').before('<p>Unsupported League</p>');
+//                         $('#league-yes').before('<p>Supported League</p>')
+//                     }
+//             });
+//         });
+//     });
+// $('#loading').modal('show');
+// });
 
 
 </script>
