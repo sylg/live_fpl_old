@@ -9,8 +9,8 @@ from push import *
 from classictable import *
 
 
-celery = Celery('tasks', broker='redis://localhost:6379/0', backend='redis')
-#celery = Celery('tasks', broker=redis_url)
+# celery = Celery('tasks', broker='redis://localhost:6379/0', backend='redis')
+celery = Celery('tasks', broker=redis_url, backend=redis_url)
 
 def dict_diff(dict_a, dict_b):
     return dict([
@@ -85,10 +85,10 @@ def scrapper(fixture_id):
 	if diff_update:
 		update_lineup_pts.delay(diff_update,fixture_id)
 
-@periodic_task(run_every=crontab(minute='0', hour='0',day_of_week='Friday'),ignore_result=True)
-def cleandb():
-	r.flushall()
-	r.set('livefpl_status','offline')
+# @periodic_task(run_every=crontab(minute='0', hour='0',day_of_week='Friday'),ignore_result=True)
+# def cleandb():
+# 	r.flushall()
+# 	r.set('livefpl_status','offline')
 
 
 @celery.task(ignore_result=True)
