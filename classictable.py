@@ -9,32 +9,32 @@ headers = {'User-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.go
 def getteams(leagueid):
 	url = 'http://fantasy.premierleague.com/my-leagues/%s/standings/' % leagueid
 	response = requests.get(url, headers=headers)
-	if response.status_code == 200:
-		html = response.text
-		tablestart = html.find('<!-- League tables -->')
-		tableend = html.find('</section>')
-		html = html[tablestart:tableend]
-		soup = BeautifulSoup(html)
-		if len(soup.find_all('tr')) <= 25:
-			print "Scrapping..."
-			for team in soup.find_all('tr'):
+	html = response.text
+	tablestart = html.find('<!-- League tables -->')
+	tableend = html.find('</section>')
+	html = html[tablestart:tableend]
+	soup = BeautifulSoup(html)
+	if len(soup.find_all('tr')) <= 25:
+		print "Scrapping..."
+		for team in soup.find_all('tr'):
 
-				if team.find('a') == None:
-					continue
-				teamname = unicodedata.normalize('NFKD', team.find('a').string).encode('ascii','ignore')
-				team_id = int(team.a['href'].strip('/').split('/')[1])
-				total_pts = int(team.td.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.string)
-				gw_pts = int(team.td.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.string)
-				r.sadd('league:%s'%leagueid, team_id)
-				r.hset('league:%s:info'%leagueid, 'players', r.scard('league:%s'%leagueid))
-				for team in r.smembers('league:%s'%leagueid):
-					if r.exists('team:%s'%team) == False:
-						r.hmset('team:%s' %team_id,{'id':team_id, 'totalpts':total_pts, 'gwpts':gw_pts, 'teamname':teamname})
+			if team.find('a') == None:
+				continue
+			teamname = unicodedata.normalize('NFKD', team.find('a').string).encode('ascii','ignore')
+			team_id = int(team.a['href'].strip('/').split('/')[1])
+			total_pts = int(team.td.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.string)
+			gw_pts = int(team.td.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.string)
+			r.sadd('league:%s'%leagueid, team_id)
+			r.sadd('allteams', team_id)
+			r.hset('league:%s:info'%leagueid, 'players', r.scard('league:%s'%leagueid))
+			for team in r.smembers('league:%s'%leagueid):
+				if r.exists('team:%s'%team) == False:
+					r.hmset('team:%s' %team_id,{'id':team_id, 'totalpts':total_pts, 'gwpts':gw_pts, 'teamname':teamname})
 
-		else:
-			print "Too big. Skip."
-			r.sadd('league:%s'%leagueid,"toobig")
-			r.hset('league:%s:info'%leagueid,"players", 0)
+	else:
+		print "Too big. Skip."
+		r.sadd('league:%s'%leagueid,"toobig")
+		r.hset('league:%s:info'%leagueid,"players", 0)
 		
 
 def getlineup(teamid, gw):
@@ -48,6 +48,9 @@ def getlineup(teamid, gw):
 		soup = BeautifulSoup(html)
 		for row in soup.find_all('tr'):
 			r.hset('team:%s:lineup'%teamid,str(row.td.string), 0) 
+	else:
+		print "Error got status code:%s" % response.status_code
+
 	
 
 def get_classic_leagues(teamid,current_gw):

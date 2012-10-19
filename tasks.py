@@ -67,16 +67,23 @@ def scrapper(fixture_id):
 				i += 1
 
 	#Begin Differential between Scrap & push
+	diff_update = {}
 	for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
 		if r.hexists(players+':old:%s' %fixture_id, 'MP') == 1:
 			old = r.hgetall(players+':old:%s' %fixture_id)
 			fresh = r.hgetall(players+':fresh:%s' %fixture_id)
 			if dict_diff(old,fresh):
+				diff_update[players] = dict_diff(old,fresh)
 				r.set('livefpl_status','live')
 				push_data(players,dict_diff(old,fresh),fixture_id)
 				
 		else:
 			r.rename(players+':fresh:%s' %fixture_id, players+':old:%s' %fixture_id)
+			for team_id in r.smembers('allteams'):
+				if r.hexists('team:%s:lineup'%team_id, players) and int(r.hget(players+':old:'+str(fixture_id), 'TP')) != 0: 
+					r.hincrby('team:%s'%team_id, 'gwpts', int(r.hget(players+':old:'+str(fixture_id), 'TP')) ) 
+	if diff_update:
+		update_lineup_pts.delay(diff_update,fixture_id)
 
 @periodic_task(run_every=crontab(minute='0', hour='0',day_of_week='Friday'),ignore_result=True)
 def cleandb():
@@ -88,5 +95,17 @@ def cleandb():
 def add_data_db(team_id):
 	add_data(team_id,r.get('currentgw'))
 	push_league(team_id)
+
+
+
+@celery.task(ignore_result=True)
+def update_lineup_pts(dict_update,fixture_id):
+	print dict_update
+	print r.smembers('allteams')
+	for player_update in dict_update:
+		for team_id in r.smembers('allteams'):
+			if r.hexists('team:%s:lineup'%team_id, player_update) and int(r.hget(player_update+':old:'+str(fixture_id), 'TP')) != 0:
+				print "%s (%s pts) is in %s" %(player_update,dict_update[player_update]['TP'], team_id )
+				r.hincrby('team:%s'%team_id, 'gwpts', dict_update[player_update]['TP']) 
 
 

@@ -70,12 +70,6 @@ def add_to_db():
 		
 
 
-@app.route("/testing", methods=['GET'])
-def test():
-	scrapper = add_data_db.delay()
-	print scrapper.ready()
-	return "good"
-
 
 if __name__ == '__main__':
 	# Bind to PORT if defined, otherwise default to 5000.
