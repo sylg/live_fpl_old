@@ -9,8 +9,8 @@ from push import *
 from classictable import *
 
 
-#celery = Celery('tasks', broker='redis://localhost:6379/0', backend='redis')
-celery = Celery('tasks', broker=redis_url, backend=redis_url)
+celery = Celery('tasks', broker='redis://localhost:6379/0', backend='redis')
+#celery = Celery('tasks', broker=redis_url, backend=redis_url)
 
 def dict_diff(dict_a, dict_b):
     return dict([
@@ -69,7 +69,7 @@ def scrapper(fixture_id):
 	#Begin Differential between Scrap & push
 	diff_update = {}
 	for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
-		if r.hexists(players+':old:%s' %fixture_id, 'MP') == 1:
+		if r.hexists(players+':old:%s' %fixture_id, 'MP'):
 			old = r.hgetall(players+':old:%s' %fixture_id)
 			fresh = r.hgetall(players+':fresh:%s' %fixture_id)
 			if dict_diff(old,fresh):
@@ -80,15 +80,15 @@ def scrapper(fixture_id):
 		else:
 			r.rename(players+':fresh:%s' %fixture_id, players+':old:%s' %fixture_id)
 			for team_id in r.smembers('allteams'):
-				if r.hexists('team:%s:lineup'%team_id, players) and int(r.hget(players+':old:'+str(fixture_id), 'TP')) != 0: 
+				if players in r.lrange('team:%s:lineup'%team_id, 0, -5) and players != r.hget('team:%s'%team_id,'captain'):
 					r.hincrby('team:%s'%team_id, 'gwpts', int(r.hget(players+':old:'+str(fixture_id), 'TP')) ) 
+					r.hincrby('team:%s'%team_id,'totalpts', int(r.hget('team:%s'%team_id, 'gwpts')))
+				elif players in r.lrange('team:%s:lineup'%team_id, 0, -5)and players == r.hget('team:%s'%team_id,'captain'):
+					r.hincrby('team:%s'%team_id, 'gwpts', int(r.hget(players+':old:'+str(fixture_id), 'TP'))*2 )
+			r.hincrby('team:%s'%team_id,'totalpts', int(r.hget('team:%s'%team_id, 'gwpts')))
+
 	if diff_update:
 		update_lineup_pts.delay(diff_update,fixture_id)
-
-# @periodic_task(run_every=crontab(minute='0', hour='0',day_of_week='Friday'),ignore_result=True)
-# def cleandb():
-# 	r.flushall()
-# 	r.set('livefpl_status','offline')
 
 
 @celery.task(ignore_result=True)
@@ -97,15 +97,20 @@ def add_data_db(team_id):
 	push_league(team_id)
 
 
-
 @celery.task(ignore_result=True)
 def update_lineup_pts(dict_update,fixture_id):
+	print "This is the dict"
 	print dict_update
-	print r.smembers('allteams')
 	for player_update in dict_update:
 		for team_id in r.smembers('allteams'):
-			if r.hexists('team:%s:lineup'%team_id, player_update) and int(r.hget(player_update+':old:'+str(fixture_id), 'TP')) != 0:
-				print "%s (%s pts) is in %s" %(player_update,dict_update[player_update]['TP'], team_id )
-				r.hincrby('team:%s'%team_id, 'gwpts', dict_update[player_update]['TP']) 
+			old_gwpts = int(r.hget('team:%s'%team_id, 'gwpts'))
+			old_tp = int(r.hget(player_update+':old:'+str(fixture_id), 'TP'))
+			if player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and 'TP' in dict_update[player_update] and players_update != r.hget('team:%s'%team_id,'captain'):
+				r.hincrby('team:%s'%team_id, 'gwpts', int(dict_update[player_update]['TP']) - old_tp) 
+			elif player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and 'TP' in dict_update[player_update] and players_update == r.hget('team:%s'%team_id,'captain'):
+				r.hincrby('team:%s'%team_id, 'gwpts', (int(dict_update[player_update]['TP']) - old_tp)*2) 
+			if old_gwpts != int(r.hget('team:%s'%team_id, 'gwpts')):
+				incr = int(r.hget('team:%s'%team_id, 'gwpts')) - old_gwpts 
+				r.hincrby('team:%s'%team_id,'totalpts', incr)
 
 

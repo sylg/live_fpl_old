@@ -38,16 +38,20 @@ def getteams(leagueid):
 		
 
 def getlineup(teamid, gw):
-	url = "http://fantasy.premierleague.com/entry/%s/event-history/%s/#ismDataView" % (teamid, gw)
+	url = "http://fantasy.premierleague.com/entry/%s/event-history/%s/" % (teamid, gw)
 	response = requests.get(url, headers=headers)
 	if response.status_code == 200:
 		html = response.text
 		tablestart = html.find('<tbody id="ismDataElements">')
 		tableend = html.find('<!-- sponsor -->')
-		html = html[tablestart:tableend]
-		soup = BeautifulSoup(html)
-		for row in soup.find_all('tr'):
-			r.hset('team:%s:lineup'%teamid,str(row.td.string), 0) 
+		soup1 = BeautifulSoup(html[tablestart:tableend])
+		capstart = html.find('<img width="16" height="16" alt="captain" src="http://cdn.ismfg.net/static/plfpl/img/icons/captain.png" title="captain" class="ismCaptain ismCaptainOn">')
+		capend = html.find('<!-- end ismPitch -->')
+		soup2 = BeautifulSoup(html[capstart:capend]) 
+		captain = str(soup2.find('dt').span.string).strip()
+		for row in soup1.find_all('tr'):
+			r.rpush('team:%s:lineup'%teamid,str(row.td.string))
+			r.hset('team:%s'%teamid, 'captain', captain )
 	else:
 		print "Error got status code:%s" % response.status_code
 
