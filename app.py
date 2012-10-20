@@ -6,6 +6,7 @@ from collections import OrderedDict
 from bs4 import BeautifulSoup
 from classictable import *
 from tasks import *
+import json
 
 
 app = Flask(__name__)
@@ -32,7 +33,8 @@ def live():
 
 	leaguename = r.hget('league:%s:info'%league_id, 'leaguename')
 
-	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1), league_data=league_data,currentgw=r.get('currentgw'), team_id=team_id,leagues=leagues, leaguename=leaguename)
+
+	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1), league_data=league_data,currentgw=r.get('currentgw'), team_id=team_id,leagues=leagues, leaguename=leaguename,league_id=league_id)
 
 @app.route("/status",methods=['GET'])
 def status():
@@ -68,6 +70,13 @@ def add_to_db():
 	
 	return "None"
 		
+@app.route("/updateclassic", methods=['GET'])
+def update_classic():
+	league_id = str(request.args.get('league_id'))
+	league_data = []
+	for team in r.smembers('league:%s'%league_id):
+		league_data.append(r.hgetall('team:%s'%str(team)))
+	return json.dumps(sorted(league_data, key=lambda k: k['totalpts'],reverse=True))
 
 
 

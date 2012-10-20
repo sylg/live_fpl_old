@@ -131,22 +131,35 @@ def scrapper(fixture_id):
 # 	if r.hexists(players+':old:63' , 'MP'):
 # 		r.delete(players+':old:63' )
 
-r.hset("Yaya Toure:old:63", "TP", 1)
-r.hset("Hart:old:63", "TP", 1)
-r.hset("Tezvez:old:63", "TP", 1)
-r.hset("Milner:old:63", "TP", 1)
+# r.hset("Yaya Toure:old:63", "TP", 1)
+# r.hset("Hart:old:63", "TP", 1)
+# r.hset("Tezvez:old:63", "TP", 1)
+# r.hset("Milner:old:63", "TP", 1)
 
-for team in r.smembers('allteams'):
-	r.hset('team:%s'%team, 'gwpts', 0)
+# for team in r.smembers('allteams'):
+# 	r.hset('team:%s'%team, 'gwpts', 0)
 
-scrapper(63)
-sleep(5)
-for team in r.smembers('allteams'):
-	print r.hgetall('team:%s'% team)
-
-
+# scrapper(63)
+# sleep(5)
+# for team in r.smembers('allteams'):
+# 	print r.hgetall('team:%s'% team)
 
 
+def getgw():
+	url = 'https://users.premierleague.com/PremierUser/account/login.html'
+	login_data =  {'email':'baboo2@yopmail.com', 'password':'bibi2000'}
+	s = requests.session()
+	s.post('https://users.premierleague.com/PremierUser/redirectLogin', login_data)
+	response = requests.get(url, headers=headers)
+	if response.status_code == 200:
+		html = response.text
+		print html
+		# tablestart = html.find('<tbody id="ismDataElements">')
+		# tableend = html.find('<!-- sponsor -->')
+		# html = html[tablestart:tableend]
+		# soup = BeautifulSoup(html)
 
+
+getgw()
 
 

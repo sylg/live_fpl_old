@@ -36,7 +36,7 @@
 <div class="navbar navbar-inverse navbar-fixed-top">
 <div class="navbar-inner">
     <a class="brand" href="/">LiveFPL</a>
-    <a href="#" class="btn btn-success">Refresh</a>
+    <a href="/live?league_id={{league_id}}&team_id={{ team_id }}" class="btn btn-success">Refresh</a>
     <ul class="nav">
 
     	<li class="dropdown"><a id="leagues" href="#"  class="dropdown-toggle" data-toggle="dropdown">Leagues <b class="caret"></b></a>
@@ -59,7 +59,7 @@
 
 <div class="container-fluid">
 	<div class="span8">
-		<h4>{{ leaguename }}</h4>
+		<h4 id="{{ league_id }}">{{ leaguename }}</h4>
 		{% if league_data[0] != 'None'  %}
 
 		<table class="table table-bordered" id="xtable">
@@ -120,8 +120,6 @@ $(document).ready(function(){
 		$('#status').append(data)
 	});
 });
-
-
 //Table sorting $('#xtable').sortTable({onCol:2,sortDesc:true, keepRelationships:true})
 
 
@@ -134,6 +132,17 @@ window.setInterval(function(){
 			};
 	});
 }, 60000);
+
+
+// //Update league table
+
+// window.setInterval(function(){
+// 		$.get('/updateclassic?league_id='+$('h4').attr('id'), function(data) {
+// 			console.log(data)
+
+// 		});
+// }, 10000);
+
 </script>
 </body>
 </html>
