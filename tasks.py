@@ -9,8 +9,8 @@ from push import *
 from classictable import *
 
 
-celery = Celery('tasks', broker='redis://localhost:6379/0', backend='redis')
-#celery = Celery('tasks', broker=redis_url, backend=redis_url)
+#celery = Celery('tasks', broker='redis://localhost:6379/0', backend='redis')
+celery = Celery('tasks', broker=redis_url, backend=redis_url)
 
 def dict_diff(dict_a, dict_b):
     return dict([
