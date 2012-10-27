@@ -1,11 +1,8 @@
-import redis
 from bs4 import BeautifulSoup
 from push import *
 import unicodedata
 import requests
-
-
-headers = {'User-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'}
+from settings import *
 
 def getteams(leagueid):
 	url = 'http://fantasy.premierleague.com/my-leagues/%s/standings/' % leagueid
@@ -24,6 +21,7 @@ def getteams(leagueid):
 			teamname = unicodedata.normalize('NFKD', team.find('a').string).encode('ascii','ignore')
 			team_id = int(team.a['href'].strip('/').split('/')[1])
 			total_pts = int(team.td.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.string)
+			r.hset('team:%s:leagues'%team_id,leagueid, total_pts)
 			gw_pts = int(team.td.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.string)
 			r.sadd('league:%s'%leagueid, team_id)
 			r.sadd('allteams', team_id)
@@ -82,15 +80,15 @@ def get_classic_leagues(teamid,current_gw):
 			league_id = str(leagueurl.strip('/').split('/')[1])
 			if r.exists('league:%s:info'%league_id) == False:
 				r.hmset('league:%s:info'%league_id, {'leaguename': leaguename, 'type':'classic', 'id':league_id })
-			if league_id not in r.smembers('team:%s:leagues'%teamid):
-				r.sadd('team:%s:leagues'%teamid, league_id)
+			if league_id not in r.hgetall('team:%s:leagues'%teamid):
+				r.hset('team:%s:leagues'%teamid, league_id, 0)
 	else:
 		print "Error got status code:%s" % response.status_code
 
 
 def add_data(teamid,current_gw):
 	get_classic_leagues(teamid, current_gw)
-	for league in r.smembers('team:%s:leagues'%teamid):
+	for league in r.hgetall('team:%s:leagues'%teamid):
 		if r.exists('league:%s'%league) == False:
 			print "league %s doesn't exists"% league
 			getteams(league)
