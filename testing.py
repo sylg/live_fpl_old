@@ -43,13 +43,46 @@ def getlineup(teamid, gw):
 		capstart = html.find('<img width="16" height="16" alt="captain" src="http://cdn.ismfg.net/static/plfpl/img/icons/captain.png" title="captain" class="ismCaptain ismCaptainOn">')
 		capend = html.find('<!-- end ismPitch -->')
 		soup2 = BeautifulSoup(html[capstart:capend]) 
+		vcstart =html.find('<img width="16" height="16" alt="vice-captain" src="http://cdn.ismfg.net/static/plfpl/img/icons/vice_captain.png" title="vice-captain" class="ismViceCaptain ismViceCaptainOn">')
+		vcend =html.find('<!-- end ismPitch -->')
+		soup3 = BeautifulSoup(html[vcstart:vcend])
 		captain = str(soup2.find('dt').span.string).strip()
+		vc = str(soup3.find('dt').span.string).strip()
 		for row in soup1.find_all('tr'):
 			r.rpush('team:%s:lineup'%teamid,str(row.td.string))
-			r.hset('team:%s'%teamid, 'captain', captain )
+		r.hset('team:%s'%teamid, 'captain', captain )
+		r.hset('team:%s'%teamid,'vc',vc)
 	else:
 		print "Error got status code:%s" % response.status_code
 
 
 
-getlineup(38861,8)
+def vc(teamid):
+	cap = r.hget('team:%s'%teamid, 'captain')
+	vc = r.hget('team:%s'%teamid, 'vc')
+	capmp = 0
+	vcmp = 0
+	capfid = 0
+	vcfid = 0
+	for fixture_id in r.lrange('fixture_ids',0,-1):
+
+		if cap in r.lrange('lineups:%s'%fixture_id,0,-5):
+			capmp = r.hget('%s:old:%s'%(cap,fixture_id), 'MP')
+			capfid = fixture_id
+
+		if vc in r.lrange('lineups:%s'%fixture_id, 0, -5):
+			vcmp = r.hget('%s:old:%s'%(vc,fixture_id), 'MP')
+			vcfid = fixture_id
+
+	if capmp == 0 and vcmp > 0:
+		r.hincrby('team:%s'%team_id, 'cappts', r.hget('%s:old:%s'%(vc,vcfid), 'T')*2)
+	else:
+		r.hincrby('team:%s'%team_id, 'cappts', r.hget('%s:old:%s'%(cap,capfid), 'T')*2)
+
+
+def reset():
+	for teamid in r.smembers('allteams'):
+		r.hset('team:%s'%teamid,'cappts',0)
+		print "changed cappts of %s"%teamid
+
+reset()

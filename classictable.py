@@ -48,10 +48,17 @@ def getlineup(teamid, gw):
 		capstart = html.find('<img width="16" height="16" alt="captain" src="http://cdn.ismfg.net/static/plfpl/img/icons/captain.png" title="captain" class="ismCaptain ismCaptainOn">')
 		capend = html.find('<!-- end ismPitch -->')
 		soup2 = BeautifulSoup(html[capstart:capend]) 
+		vcstart =html.find('<img width="16" height="16" alt="vice-captain" src="http://cdn.ismfg.net/static/plfpl/img/icons/vice_captain.png" title="vice-captain" class="ismViceCaptain ismViceCaptainOn">')
+		vcend =html.find('<!-- end ismPitch -->')
+		soup3 = BeautifulSoup(html[vcstart:vcend])
 		captain = str(soup2.find('dt').span.string).strip()
+		vc = str(soup3.find('dt').span.string).strip()
 		for row in soup1.find_all('tr'):
 			r.rpush('team:%s:lineup'%teamid,str(row.td.string))
-			r.hset('team:%s'%teamid, 'captain', captain )
+		r.hset('team:%s'%teamid, 'captain', captain )
+		r.hset('team:%s'%teamid,'vc',vc)
+		r.hset('team:%s'%teamid,'cappts',0)
+		
 	else:
 		print "Error got status code:%s" % response.status_code
 
