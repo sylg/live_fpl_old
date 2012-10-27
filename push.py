@@ -7,6 +7,8 @@ r = redis.from_url(redis_url)
 
 #r = redis.StrictRedis(host='localhost', port=6379, db=0 )
 
+
+
 pusher.app_id = "28247"
 pusher.key = "b2c9525770d59267a6a2"
 pusher.secret = "12d6efe3c861e6ce372a"

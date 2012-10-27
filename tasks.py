@@ -45,7 +45,7 @@ def create_scrapper():
 
 @celery.task(ignore_result=True)
 def scrapper(fixture_id):
-	url = 'http://0.0.0.0:5001/fixture/%s/' %fixture_id
+	url = 'http://fantasy.premierleague.com/fixture/%s/' %fixture_id
 	response = requests.get(url, headers=headers)
 	html = response.text
 	soup = BeautifulSoup(html)
@@ -81,7 +81,6 @@ def scrapper(fixture_id):
 
 	if diff_update:
 		update_lineup_pts.delay(diff_update,fixture_id)
-	
 	if r.hexists(players+':fresh', 'MP'):
 		for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
 			r.rename(players+':fresh', players+':old')
