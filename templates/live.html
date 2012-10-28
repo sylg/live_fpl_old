@@ -75,9 +75,9 @@
 			{% for team in league_data %}
 				{% if team['id'] == team_id %}
 					<tr>
-						<td class="teamname"><strong>{{ team['teamname'] }}</strong></td>
-						<td class="gwpts"><strong>{{ team['gwpts'] }}</strong></td>
-						<td class="totalpts"><strong>{{ team['totalpts']}}</strong></td>
+						<td class="teamname">{{ team['teamname'] }}</td>
+						<td class="gwpts">{{ team['gwpts'] }}</td>
+						<td class="totalpts">{{ team['totalpts']}}</td>
 					</tr>
 				{% else %}
 					<tr>
@@ -141,7 +141,7 @@ function updateMyTeam() {
 
 
 function updateTable() {
-	$('#xtable').sortTable({onCol:3,sortDesc:true, keepRelationships:true});
+	$('#xtable').sortTable({onCol:3,sortDesc:true, keepRelationships:true,});
 
 	// $('#xtable tbody tr').each(function(){
 	// 	var tableTeamname = $('.teamname', this).html();
