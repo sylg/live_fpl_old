@@ -5,6 +5,8 @@ from push import *
 import requests
 from tasks import *
 from classictable import *
+import mechanize
+import re
 
 headers = {'User-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'}
 
@@ -49,9 +51,9 @@ def getlineup(teamid, gw):
 		captain = str(soup2.find('dt').span.string).strip()
 		vc = str(soup3.find('dt').span.string).strip()
 		for row in soup1.find_all('tr'):
-			r.rpush('team:%s:lineup'%teamid,str(row.td.string))
-		r.hset('team:%s'%teamid, 'captain', captain )
-		r.hset('team:%s'%teamid,'vc',vc)
+			print str(row.td.string)
+		print "captation is %s"%captain
+		print "vc is %s"%vc
 	else:
 		print "Error got status code:%s" % response.status_code
 
@@ -103,4 +105,24 @@ def update_gwpts(team):
 				r.hincrby('team:%s'%team, 'totalpts', r.hget('team:%s'%team, 'gwpts') )
 	print "Gwpts : (%s + %s ) pts & totalpts : %s pts"%(int(r.hget('team:%s'%team, 'gwpts')), int(r.hget('team:%s'%team, 'cappts')), r.hget('team:%s'%team, 'totalpts'))
 
-update_gwpts(37828)					
+
+def getgw():
+	url = "http://fantasy.premierleague.com/"
+	br = mechanize.Browser()
+	br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
+	br.open(url)
+	br.select_form(nr=0)
+	br.form['email'] = "baboo2@yopmail.com"
+	br.form['password'] = "bibi2000"
+	br.submit()
+	html = br.back().read()
+	#soup = BeautifulSoup(html)
+	start = html.find('ismMegaLarge')
+	html = html[start+14:start+25]
+	currentgw = re.findall(r"\d{1,2}", html)[0]
+	r.set('currentgw',currentgw)
+	
+getgw()
+
+getlineup(37828,r.get('currentgw'))
+

@@ -22,7 +22,7 @@
 	    WEB_SOCKET_DEBUG = true;
 
 	    var pusher = new Pusher('b2c9525770d59267a6a2');
-	    var channel = pusher.subscribe('prod_ticker');
+	    var channel = pusher.subscribe('dev_ticker');
 	    channel.bind('ticker', function(data) {
     		$(data.message).prependTo('#update').hide();
     		$('span').tooltip();

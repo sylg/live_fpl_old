@@ -7,6 +7,8 @@ import requests
 from push import *
 from classictable import *
 from settings import *
+import re
+import mechanize
 
 celery = Celery('tasks', broker=redis_url, backend=redis_url)
 
@@ -19,6 +21,23 @@ def dict_diff(dict_a, dict_b):
             (key in dict_b and (not key in dict_a or dict_a[key] != dict_b[key]))
         )
     ])
+
+
+@periodic_task(run_every=crontab(hour='12-14'),ignore_result=True)
+def getgw():
+	url = "http://fantasy.premierleague.com/"
+	br = mechanize.Browser()
+	br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
+	br.open(url)
+	br.select_form(nr=0)
+	br.form['email'] = "baboo2@yopmail.com"
+	br.form['password'] = "bibi2000"
+	br.submit()
+	html = br.back().read()
+	start = html.find('ismMegaLarge')
+	html = html[start+14:start+25]
+	currentgw = re.findall(r"\d{1,2}", html)[0]
+	r.set('currentgw',currentgw)
 
 @periodic_task(run_every=crontab(minute='*/1',hour='10-21',day_of_week='saturday,sunday,monday,tuesday'), ignore_result=True)
 def get_fixture_ids():

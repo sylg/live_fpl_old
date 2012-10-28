@@ -12,6 +12,8 @@ messages = { 'A': 'just got an assist',
 }
 
 def push_data(name,keys,fixture_id):
+	print "For player: %s in fixture: %s"%(name, fixture_id)
+	print "Pushing data: %s"%keys
 	for key in keys:
 		if key in messages and keys[key] != 0:
 			msg = '<li><p><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +messages[key]+ '</p></li>'
