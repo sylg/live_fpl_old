@@ -23,7 +23,20 @@ def dict_diff(dict_a, dict_b):
     ])
 
 
-@periodic_task(run_every=crontab(hour='12-14'),ignore_result=True)
+@periodic_task(run_every=crontab(minute='*' ,hour='11-22'),ignore_result=True)
+def fplupdating():
+	url = 'http://fantasy.premierleague.com/fixtures/'
+	response = requests.get(url, headers=headers)
+	if len(response.history) != 0:
+		print "livefpl website is updating do nothing"
+		r.set('scrapmode', 'OFF')
+	else:
+		print "livefpl website is live, go scrap"
+		r.set('scrapmode', 'ON')
+		livefpl_status.delay()
+		getgw.delay()
+
+@celery.task(ignore_result=True)
 def getgw():
 	url = "http://fantasy.premierleague.com/"
 	br = mechanize.Browser()
@@ -39,19 +52,41 @@ def getgw():
 	currentgw = re.findall(r"\d{1,2}", html)[0]
 	r.set('currentgw',currentgw)
 
-@periodic_task(run_every=crontab(minute='*/1',hour='10-21',day_of_week='saturday,sunday,monday,tuesday'), ignore_result=True)
-def get_fixture_ids():
-	url = 'http://fantasy.premierleague.com/fixtures/'
-	response = requests.get(url, headers=headers)
-	html = response.text
-	tablestart = html.find('<div id="ism" class="ism">')
-	tableend = html.find('<aside class="ismAside">')
-	html = html[tablestart:tableend]
+@celery.task(ignore_result=True)
+def livefpl_status():
+	url = "http://fantasy.premierleague.com/"
+	br = mechanize.Browser()
+	br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
+	br.open(url)
+	br.select_form(nr=0)
+	br.form['email'] = "baboo2@yopmail.com"
+	br.form['password'] = "bibi2000"
+	br.submit()
+	html = br.back().read()
+	
+	start = html.find('<table class="ismTable ismEventStatus ismHomeMarginTop">')
+	stop =  html.find('<div class="ismHomeMarginTop">')
+	html = html[start:stop]
 	soup = BeautifulSoup(html)
-	for row in soup.find_all('tr', 'ismFixtureSummary'):
-		fixture_id = row.find('a', text="Detailed stats")['data-id']
-		if fixture_id not in r.lrange('fixture_ids',0,-1):
-			r.lpush('fixture_ids', fixture_id)
+	if "Live" in [str(td.string) for td in soup.find_all('td', {'class':'ismFinished'})]:
+		r.set('livefpl_status','Live')
+	else:
+		r.set('livefpl_status','Offline')
+
+@periodic_task(run_every=crontab(minute='*',hour='10-21',day_of_week='saturday,sunday,monday,tuesday'), ignore_result=True)
+def get_fixture_ids():
+	if r.get('scrapmode') == 'ON':
+		url = 'http://fantasy.premierleague.com/fixtures/'
+		response = requests.get(url, headers=headers)
+		html = response.text
+		tablestart = html.find('<div id="ism" class="ism">')
+		tableend = html.find('<aside class="ismAside">')
+		html = html[tablestart:tableend]
+		soup = BeautifulSoup(html)
+		for row in soup.find_all('tr', 'ismFixtureSummary'):
+			fixture_id = row.find('a', text="Detailed stats")['data-id']
+			if fixture_id not in r.lrange('fixture_ids',0,-1):
+				r.lpush('fixture_ids', fixture_id)
 
 
 @periodic_task(run_every=crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
