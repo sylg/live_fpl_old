@@ -76,8 +76,12 @@ def add_to_db():
 def update_classic():
 	league_id = str(request.args.get('league_id'))
 	league_data = []
-	for team in r.smembers('league:%s'%league_id):
-		league_data.append(r.hgetall('team:%s'%str(team)))
+	if r.sismember('league:%s'%league_id, "toobig") == 0:
+		for team in r.smembers('league:%s'%league_id):
+			league_data.append(r.hgetall('team:%s'%str(team)))
+		for team in league_data:
+			team['id']
+			team['totalpts'] = r.hget('team:%s:leagues'%team['id'], league_id)
 	return json.dumps(sorted(league_data, key=lambda k: k['totalpts'],reverse=True))
 
 

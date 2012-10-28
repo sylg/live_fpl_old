@@ -8,7 +8,6 @@ from push import *
 from classictable import *
 from settings import *
 
-#celery = Celery('tasks', broker='redis://localhost:6379/0', backend='redis')
 celery = Celery('tasks', broker=redis_url, backend=redis_url)
 
 def dict_diff(dict_a, dict_b):
@@ -58,31 +57,37 @@ def scrapper(fixture_id):
 
 
 			
-			rp.hset(playername+':fresh','TEAMNAME',str(teamname))
+			rp.hset(playername+':fresh:%s'%fixture_id,'TEAMNAME',str(teamname))
 			keys = ['MP', 'GS', 'A', 'CS', 'GC', 'OG', 'PS', 'PM', 'YC', 'RC','S', 'B', 'ESP', 'TP']
 			i = 1
 			for key in keys:
-				rp.hset(playername+':fresh', key, int(players.find_all('td')[i].string.strip()))
+				rp.hset(playername+':fresh:%s'%fixture_id, key, int(players.find_all('td')[i].string.strip()))
 				i += 1
 
 	#Begin Differential between Scrap & push
 	diff_update = {}
+	first_scrap_update = {}
 	for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
-		if rp.hexists(players+':old', 'MP'):
-			old = rp.hgetall(players+':old')
-			fresh = rp.hgetall(players+':fresh')
+		if rp.hexists(players+':old:%s'%fixture_id, 'MP'):
+			old = rp.hgetall(players+':old:%s'%fixture_id)
+			fresh = rp.hgetall(players+':fresh:%s'%fixture_id)
 			if dict_diff(old,fresh):
 				diff_update[players] = dict_diff(old,fresh)
 				r.set('livefpl_status','live')
 				push_data(players,dict_diff(old,fresh),fixture_id)
 		else:
-			rp.rename(players+':fresh', players+':old')
+			first_scrap_update[players] = rp.hgetall(players+':fresh:%s'%fixture_id)
+			rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
+
+	# if first_scrap_update:
+	# 	print "Updating teams linuep pts with 1st scrap data"
+	# 	update_lineup_pts.delay(first_scrap_update,fixture_id)
 
 	if diff_update:
 		update_lineup_pts.delay(diff_update,fixture_id)
-	if rp.hexists(players+':fresh', 'MP'):
+	if rp.hexists(players+':fresh:%s'%fixture_id, 'MP'):
 		for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
-			rp.rename(players+':fresh', players+':old')
+			rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
 
 
 @celery.task(ignore_result=True)
@@ -99,27 +104,23 @@ def update_lineup_pts(dict_update,fixture_id):
 		if 'TP' in dict_update[player_update] and player_update:
 			for team_id in r.smembers('allteams'):
 				old_gwpts = int(r.hget('team:%s'%team_id, 'gwpts'))
-				old_tp = int(rp.hget(player_update+':old', 'TP'))
+				old_tp = int(rp.hget(player_update+':old:%s'%fixture_id, 'TP'))
 				old_cappts = int(r.hget('team:%s'%team_id, 'cappts'))
 				if player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update != r.hget('team:%s'%team_id,'captain'):
-					print "updating TP of %s in team %s by %s pts ( %s - %s )" % (player_update, team_id, int(dict_update[player_update]['TP']) - old_tp,int(dict_update[player_update]['TP']), old_tp )
-					r.hincrby('team:%s'%team_id, 'gwpts', int(dict_update[player_update]['TP']) - old_tp) 
+					r.hincrby('team:%s'%team_id, 'gwpts', int(dict_update[player_update]['TP'])) 
 				elif player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update == r.hget('team:%s'%team_id,'captain'):
-					print "%s is Captain of %s" % (player_update, team_id)
 					r.hset('team:%s'%team_id, 'cappts', 0)
-					r.hincrby('team:%s'%team_id, 'cappts', (int(dict_update[player_update]['TP']))*2)
+					r.hincrby('team:%s'%team_id, 'cappts', int(dict_update[player_update]['TP'])*2)
 					
 
 				if old_cappts != int(r.hget('team:%s'%team_id, 'cappts')):
 					r.hincrby('team:%s'%team_id,'gwpts', -old_cappts)
 					incr = int(r.hget('team:%s'%team_id, 'cappts'))
-					print "capppts are diff %s & %s. Updating gwpts by %s"% (old_cappts, r.hget('team:%s'%team_id, 'cappts'), str(incr))
 					r.hincrby('team:%s'%team_id,'gwpts', incr)
 
 
 				if old_gwpts != int(r.hget('team:%s'%team_id, 'gwpts')):
 					incr = int(r.hget('team:%s'%team_id, 'gwpts')) - old_gwpts 
-					print "gwpts are different %s & %s. Updating totalpts by %s" %( old_gwpts , r.hget('team:%s'%team_id, 'gwpts'), str(incr))
 					r.hincrby('team:%s'%team_id,'totalpts', incr)
 					for league in r.hgetall('team:%s:leagues'%team_id):
 						r.hincrby('team:%s:leagues'%team_id, league, incr)

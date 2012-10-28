@@ -8,21 +8,22 @@ messages = { 'A': 'just got an assist',
 			  'PS': 'just saved a Penalty',
 			  'PM': 'just missed a Penalty!',
 			  'OG': 'just scored an OWN GOAL!',
-			  'S': 'just made 3 saves, +1pt'
+			  'S': 'just made 3 saves, +1pt',
 }
 
 def push_data(name,keys,fixture_id):
 	for key in keys:
 		if key in messages and keys[key] != 0:
-			print "old exsist for this player = %s "%(r.exists(name+':old'))
-			print "Fresh exsist for this player = %s "%(r.exists(name+':Fresh'))
-			msg = '<li><p><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (rp.hget(name+':old', 'TP'), name) +messages[key]+ '</p></li>'
+			msg = '<li><p><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +messages[key]+ '</p></li>'
 			if key == "S":
 				if int(keys[key]) % 3 == 0:
-					p['test_channel'].trigger('ticker', {'message': msg })
+					p[ticker_channel].trigger('ticker', {'message': msg })
 					r.lpush('pushed_data', msg)
+			elif key =='B':
+				msg = '<li><p><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +'Received %s Bonus point(s)'%keys[key] + '</p></li>'
+				p[ticker_channel].trigger('ticker', {'message': msg })
 			else:
-				p['test_channel'].trigger('ticker', {'message': msg })
+				p[ticker_channel].trigger('ticker', {'message': msg })
 				r.lpush('pushed_data', msg)
 	
 

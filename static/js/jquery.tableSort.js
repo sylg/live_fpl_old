@@ -181,7 +181,21 @@ jQuery.fn.sortTable = function(params) {
 		animateOn.children('div').animate({top: moveBy_top}, !params.noAnim ? 500 : 0, null, function() {
 			if ($(this).parent().is('.sortOnThisCol') || !params.keepRelationships) {
 				done++;
-				if (done == valuesToSort.length-1) thiss.tableSort_cleanUp();
+				// if (done == valuesToSort.length-1) thiss.tableSort_cleanUp();
+				if (done == valuesToSort.length-1){
+				       thiss.find('td').each(function() {
+				              if($(this).get(0).toTD) $($(this).get(0).toTD).get(0).newHTML = $(this).children('div').html();
+				       });
+				       thiss.find('td').each(function() { $(this).html($(this).get(0).newHTML); });
+				       $('td.tableSort_TDRepopulated').removeClass('tableSort_TDRepopulated');
+				       thiss.find('.sortOnThisCol').removeClass('sortOnThisCol');
+				       thiss.find('td[newHTML]').attr('newHTML', '');
+				       thiss.find('td[toTD]').attr('toTD', '');
+				       if (typeof callback == 'function') { // make sure the callback is a function
+				         callback.call(this); // brings the scope to the callback
+				       }                                   
+				}
+
 			}
 		});
 		
@@ -190,22 +204,22 @@ jQuery.fn.sortTable = function(params) {
 };
 
 
-jQuery.fn.tableSort_cleanUp = function() {
+// jQuery.fn.tableSort_cleanUp = function() {
 
-	/*-----------
-	| AFTER ANIM
-	| 	- assign each <td> its new content as property of it (DON'T populate it yet - this <td> may still need to be read by
-	|	  other <td>s' toTD node references
-	|	- once new contents for each <td> gathered, populate
-	|	- remove some identifier classes and properties
-	-----------*/
-	$(this).find('td').each(function() {
-		if($(this).get(0).toTD) $($(this).get(0).toTD).get(0).newHTML = $(this).children('div').html();
-	});
-	$(this).find('td').each(function() { $(this).html($(this).get(0).newHTML); });
-	$('td.tableSort_TDRepopulated').removeClass('tableSort_TDRepopulated');
-	$(this).find('.sortOnThisCol').removeClass('sortOnThisCol');
-	$(this).find('td[newHTML]').attr('newHTML', '');
-	$(this).find('td[toTD]').attr('toTD', '');
+// 	/*-----------
+// 	| AFTER ANIM
+// 	| 	- assign each <td> its new content as property of it (DON'T populate it yet - this <td> may still need to be read by
+// 	|	  other <td>s' toTD node references
+// 	|	- once new contents for each <td> gathered, populate
+// 	|	- remove some identifier classes and properties
+// 	-----------*/
+// 	$(this).find('td').each(function() {
+// 		if($(this).get(0).toTD) $($(this).get(0).toTD).get(0).newHTML = $(this).children('div').html();
+// 	});
+// 	$(this).find('td').each(function() { $(this).html($(this).get(0).newHTML); });
+// 	$('td.tableSort_TDRepopulated').removeClass('tableSort_TDRepopulated');
+// 	$(this).find('.sortOnThisCol').removeClass('sortOnThisCol');
+// 	$(this).find('td[newHTML]').attr('newHTML', '');
+// 	$(this).find('td[toTD]').attr('toTD', '');
 	
-};
+// };

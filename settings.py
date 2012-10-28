@@ -4,15 +4,21 @@ import os
 
 
 ## PUSHER ##
+############
 pusher.app_id = "28247"
 pusher.key = "b2c9525770d59267a6a2"
 pusher.secret = "12d6efe3c861e6ce372a"
 p = pusher.Pusher()
 
+#Ticker Channel
+
+ticker_channel = 'prod_ticker'
+#ticker_channel = 'dev_ticker'
+
 
 
 ## REDIS ##
-
+###########
 
 #Heroku
 

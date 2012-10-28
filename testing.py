@@ -87,10 +87,20 @@ def reset():
 
 
 
-league_data = [{'vc': 'Berbatov', 'totalpts': '421', 'teamname': 'KFC_Overijse', 'cappts': '0', 'gwpts': '0', 'captain': 'Van Persie', 'id': '38861'}, {'vc': 'Ba', 'totalpts': '453', 'teamname': 'MonacoDiBaviera', 'cappts': '0', 'gwpts': '0', 'captain': 'Defoe', 'id': '378429'}, {'vc': 'Tevez', 'totalpts': '351', 'teamname': 'FC Slurp', 'cappts': '0', 'gwpts': '0', 'captain': 'Ba', 'id': '933573'}, {'vc': 'Aguero', 'totalpts': '391', 'teamname': 'CP Rangers', 'cappts': '0', 'gwpts': '0', 'captain': 'Ba', 'id': '194801'}, {'vc': 'Aguero', 'totalpts': '391', 'teamname': 'FC Gamos', 'cappts': '0', 'gwpts': '0', 'captain': 'Ba', 'id': '175286'}, {'vc': 'Santi Cazorla', 'totalpts': '347', 'teamname': 'PEDD United', 'cappts': '0', 'gwpts': '0', 'captain': 'Ba', 'id': '37828'}, {'vc': 'Ba', 'totalpts': '465', 'teamname': 'Fc Paris', 'cappts': '0', 'gwpts': '0', 'captain': 'Tevez', 'id': '1538051'}, {'vc': 'Defoe', 'totalpts': '459', 'teamname': 'RSC Swarlz', 'cappts': '0', 'gwpts': '0', 'captain': 'Bale', 'id': '694831'}, {'vc': 'Ba', 'totalpts': '395', 'teamname': 'FC Van Nico', 'cappts': '0', 'gwpts': '0', 'captain': 'Hazard', 'id': '321564'}, {'vc': 'Ba', 'totalpts': '416', 'teamname': 'Fc Mbonabushia', 'cappts': '0', 'gwpts': '0', 'captain': 'Tevez', 'id': '205633'}, {'vc': 'Defoe', 'totalpts': '454', 'teamname': 'FC Lasne', 'cappts': '0', 'gwpts': '0', 'captain': 'Aguero', 'id': '688922'}, {'vc': 'Van Persie', 'totalpts': '416', 'teamname': 'FC Jaboulani', 'cappts': '0', 'gwpts': '0', 'captain': 'Santi Cazorla', 'id': '303108'}]
+def update_gwpts(team):
+	print "adding gwpts for team %s ..."%team
+	for players in r.lrange('team:%s:lineup'%team,0, -5):
+		for ids in r.lrange('fixture_ids',0,-1):
+			if rp.exists('%s:old:%s'%(players,ids)):
+				print "%s is in the %s"%(players,ids)
+				if players != r.hget('team:%s'%team,'captain'):
+					print "%s is player with %s TP"%(players,rp.hget('%s:old:%s'%(players,ids), 'TP'))
+					r.hincrby('team:%s'%team, 'gwpts', rp.hget('%s:old:%s'%(players,ids), 'TP')) 
+				elif players == r.hget('team:%s'%team,'captain'):
+					print "%s is the captaion with %s TP"%(players, int(rp.hget('%s:old:%s'%(players,ids), 'TP'))*2)
+					r.hset('team:%s'%team, 'cappts', 0)
+					r.hincrby('team:%s'%team, 'cappts',  int(rp.hget('%s:old:%s'%(players,ids), 'TP'))*2)
+				r.hincrby('team:%s'%team, 'totalpts', r.hget('team:%s'%team, 'gwpts') )
+	print "Gwpts : (%s + %s ) pts & totalpts : %s pts"%(int(r.hget('team:%s'%team, 'gwpts')), int(r.hget('team:%s'%team, 'cappts')), r.hget('team:%s'%team, 'totalpts'))
 
-for team in league_data:
-	team['id']
-	team['totalpts'] = r.hget('team:%s:leagues'%team['id'], 48483)
-	print team['totalpts']
-
+update_gwpts(37828)					
