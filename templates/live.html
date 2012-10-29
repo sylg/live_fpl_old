@@ -8,8 +8,9 @@
 	<link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
 	<script src="/static/js/bootstrap.js"></script>
-	<script src="/static/js/jquery.tableSort.js"></script>
-
+	<script src="/static/js/animator.js"></script>
+	<script src="/static/js/rankingTableUpdate.js"></script>
+	<script src="/static/js/jquery.tablesorter.min.js"></script>
 
 	<script src="http://js.pusher.com/1.12/pusher.min.js" type="text/javascript"></script>
 	<script type="text/javascript">
@@ -32,7 +33,7 @@
 
 
 </head>
-<body>
+<body style="background-image:url('/static/img/groovepaper.png')">
 
 <div class="navbar navbar-inverse navbar-fixed-top">
 <div class="navbar-inner">
@@ -63,18 +64,18 @@
 		<h4 id="{{ league_id }}">{{ leaguename }}</h4>
 		{% if league_data[0] != 'None'  %}
 
-		<table class="table table-bordered" id="xtable">
+		<table class="table table-bordered table-striped" id="xtable">
 			<thead>
 				<tr>
-					<th class="anim:id anim:constant">Team Name</th>
-					<th class=""rel='tooltip' data-title='Total Point for the gameweek {{currentgw}}'>Current GW</th>
-					<th class="anim:update fe-sortable" rel='tooltip'data-title='Total Point for this season, including this GW points'>Total Points</th>
+					<th class="anim:constant">Team Name</th>
+					<th class="anim:constant"rel='tooltip' data-title='Total Point for the gameweek {{currentgw}}'>Current GW</th>
+					<th class="anim:constant" rel='tooltip'data-title='Total Point for this season, including this GW points'>Total Points</th>
 				</tr>
 			</thead>
 			<tbody>		
 			{% for team in league_data %}
 				{% if team['id'] == team_id %}
-					<tr>
+					<tr class="success">
 						<td class="teamname">{{ team['teamname'] }}</td>
 						<td class="gwpts">{{ team['gwpts'] }}</td>
 						<td class="totalpts">{{ team['totalpts']}}</td>
@@ -140,47 +141,26 @@ function updateMyTeam() {
 }
 
 
-function updateTable() {
-	$('#xtable').sortTable({onCol:3,sortDesc:true, keepRelationships:true,});
-
-	// $('#xtable tbody tr').each(function(){
-	// 	var tableTeamname = $('.teamname', this).html();
-	// 	//$('.teamname', this).parent().removeAttr('class');
-	// });
-	// console.log("I should add green")
-	// $("td:contains('"+user_team+"')").parent().attr('class','my-team');
-	// setTimeout(function() {
- //    $("td:contains('"+user_team+"')").parent().attr('class','my-team');
- //  	}, 5000);
-	
-		
-
-}
-
-
 
 window.setInterval(function(){
+	
 	$.getJSON('/updateclassic?league_id='+$('h4').attr('id'), function(data) {
-		//console.log(data)
-		//var cloned = $('#xtable').clone(true);
-		//$('body').append(cloned.attr({'style':'display:none;','id':'cloned'}));
-		$.each(data, function(i, values){
-			var teamname = values['teamname'];
-			var gwpts = values['gwpts'];
-			var totalpts = values['totalpts'];
-			//$('#cloned tbody tr').each(function(){
-			$('#xtable tbody tr').each(function(){
-				var tableTeamname = $('.teamname', this).html();
-				if (tableTeamname == teamname){
-					$('.gwpts', this).html(gwpts);
-					$('.totalpts', this).html(totalpts);
-				}
+			console.log("new data, updating table...")
+			var cloned = $('#xtable').clone();
+			$.each(data, function(i, values){
+				var teamname = values['teamname'];
+				var gwpts = values['gwpts'];
+				var totalpts = values['totalpts'];
+				cloned.find('tbody tr').each(function(){
+						var tableTeamname = $('.teamname', this).html();
+						if (tableTeamname == teamname){
+							$('.gwpts', this).html(gwpts);
+							$('.totalpts', this).html(totalpts);
+						}
+				});
 			});
-		});
-		
-		//$('#xtable').rankingTableUpdate('#cloned');
-		//$('#cloned').attr('id','xtable')
-		updateTable()
+			cloned.tablesorter({ sortList: [[2,1]] }); 
+			$('#xtable').rankingTableUpdate(cloned);
 	});
 }, 10000);
 
