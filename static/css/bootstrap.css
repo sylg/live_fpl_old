@@ -5844,21 +5844,3 @@ font-size: 180%;
     }
 }​
 
-/* Custom CSS LIVEFPL */
-#league-yes a {
-  background-color:rgba(49, 138, 49, 0.25);
-}
-#league-no a {
-  background-color: rgba(255, 5, 5, 0.26);
-}
-
-.my-team {
-    background-color:rgba(44, 255, 69, 0.37);
-}
-
-#update p:hover {
-  background-color: #eeeeee;
-}
-#update p {
-  margin-right: 0;
-}

@@ -120,7 +120,6 @@ def scrapper(fixture_id):
 
 	#Begin Differential between Scrap & push
 	diff_update = {}
-	first_scrap_update = {}
 	for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
 		if rp.hexists(players+':old:%s'%fixture_id, 'MP'):
 			old = rp.hgetall(players+':old:%s'%fixture_id)
@@ -130,12 +129,7 @@ def scrapper(fixture_id):
 				r.set('livefpl_status','live')
 				push_data(players,dict_diff(old,fresh),fixture_id)
 		else:
-			first_scrap_update[players] = rp.hgetall(players+':fresh:%s'%fixture_id)
 			rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
-
-	# if first_scrap_update:
-	# 	print "Updating teams linuep pts with 1st scrap data"
-	# 	update_lineup_pts.delay(first_scrap_update,fixture_id)
 
 	if diff_update:
 		update_lineup_pts.delay(diff_update,fixture_id)
