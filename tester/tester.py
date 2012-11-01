@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 @app.route('/01')
 def fixture():
-	i = 5
+	i = 2
 
 	return render_template('update%s.html'%str(i))
 

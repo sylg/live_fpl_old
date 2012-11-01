@@ -123,7 +123,7 @@ def scrapper(fixture_id):
 	diff_update = {}
 	scrapped_data = {}
 	for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
-		if rp.hexists(players+':old:%s'%fixture_id, 'MP'):
+		if rp.hexists('%s:old:%s'%(players,fixture_id), 'MP'):
 			print "old hash for %s exist checking if there's a dif."%players
 			old = rp.hgetall(players+':old:%s'%fixture_id)
 			fresh = rp.hgetall(players+':fresh:%s'%fixture_id)
@@ -132,13 +132,13 @@ def scrapper(fixture_id):
 				diff_update[players] = dict_diff(old,fresh)
 				r.set('livefpl_status','live')
 				push_data(players,dict_diff(old,fresh),fixture_id)
-				rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
+				#rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
 			else:
 				print "no diff. Not pushing"
 		else:
-			rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
+			#rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
 			print "old hash for %s doesn't exist. Renaming."%players
-			scrapped_data[players] = rp.hgetall(players+':old:%s'%fixture_id)
+			scrapped_data[players] = rp.hgetall(players+':fresh:%s'%fixture_id)
 			print "adding 1st scrap data for %s to scrapped_data"%players
 
 
@@ -161,11 +161,14 @@ def update_lineup_pts(dict_update,fixture_id, who):
 		if 'TP' in dict_update[player_update]:
 			for team_id in r.smembers('allteams'):
 				old_gwpts = int(r.hget('team:%s'%team_id, 'gwpts'))
-				old_tp = int(rp.hget(player_update+':old:%s'%fixture_id, 'TP'))
+				if rp.exists(player_update+':old:%s'%fixture_id):
+					old_tp = int(rp.hget(player_update+':old:%s'%fixture_id, 'TP'))
+				else:
+					old_tp = 0
 				old_cappts = int(r.hget('team:%s'%team_id, 'cappts'))
 				if player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update != r.hget('team:%s'%team_id,'captain'):
 					print "increasing gwpts of team %s by %s pts"%(team_id, dict_update[player_update]['TP'])
-					r.hincrby('team:%s'%team_id, 'gwpts', int(dict_update[player_update]['TP'])) 
+					r.hincrby('team:%s'%team_id, 'gwpts', int(dict_update[player_update]['TP']) - old_tp ) 
 				elif player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update == r.hget('team:%s'%team_id,'captain'):
 					r.hset('team:%s'%team_id, 'cappts', 0)
 					r.hincrby('team:%s'%team_id, 'cappts', int(dict_update[player_update]['TP'])*2)
@@ -183,5 +186,9 @@ def update_lineup_pts(dict_update,fixture_id, who):
 					r.hincrby('team:%s'%team_id,'totalpts', incr)
 					for league in r.hgetall('team:%s:leagues'%team_id):
 						r.hincrby('team:%s:leagues'%team_id, league, incr)
+		rp.rename(player_update+':fresh:%s'%fixture_id, player_update+':old:%s'%fixture_id)
+
 	print "done Updating the %s teams in DB."%len(r.smembers('allteams'))
+
+
 
