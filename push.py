@@ -17,8 +17,9 @@ def push_data(name,keys,fixture_id):
 	old_tp = old_stats['TP']
 	if 'TP' in keys and keys['TP'] != old_tp:
 		for key in keys:
-			print "Double checking if the value %s is NOT the same for %s ( %s & %s )"%(key,name,old_stats[key], keys[key] )
+			print "key: %s player: %s ( %s & %s )"%(key,name,old_stats[key], keys[key] )
 			if key in messages and keys[key] != 0:
+				print "sent a push msg for %s with key: %s"%(name,key)
 				msg = '<li><p><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +messages[key]+ '</p></li>'
 				if key == "S":
 					if int(keys[key]) % 3 == 0:

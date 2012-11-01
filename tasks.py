@@ -23,7 +23,7 @@ def dict_diff(dict_a, dict_b):
     ])
 
 
-@periodic_task(run_every=crontab(minute='*' ,hour='11-22'),ignore_result=True)
+@periodic_task(run_every=crontab(minute='*' ,hour='*'),ignore_result=True)
 def fplupdating():
 	url = 'http://fantasy.premierleague.com/fixtures/'
 	response = requests.get(url, headers=headers)
@@ -89,7 +89,7 @@ def get_fixture_ids():
 				r.lpush('fixture_ids', fixture_id)
 
 
-@periodic_task(run_every=crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday'), ignore_result=True)
+@periodic_task(run_every=crontab(minute='*', hour='*',day_of_week='saturday,sunday,monday,tuesday,wednesday,thursday'), ignore_result=True)
 def create_scrapper():
 	if r.llen('fixture_ids') != 0:
 		for ids in r.lrange('fixture_ids',0, -1):
@@ -97,7 +97,8 @@ def create_scrapper():
 
 @celery.task(ignore_result=True)
 def scrapper(fixture_id):
-	url = 'http://fantasy.premierleague.com/fixture/%s/' %fixture_id
+	url = 'http://0.0.0.0:5001/%s'%fixture_id
+	#url = 'http://fantasy.premierleague.com/fixture/%s/' %fixture_id
 	response = requests.get(url, headers=headers)
 	html = response.text
 	soup = BeautifulSoup(html)
@@ -120,23 +121,31 @@ def scrapper(fixture_id):
 
 	#Begin Differential between Scrap & push
 	diff_update = {}
+	scrapped_data = {}
 	for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
 		if rp.hexists(players+':old:%s'%fixture_id, 'MP'):
+			print "old hash for %s exist checking if there's a dif."%players
 			old = rp.hgetall(players+':old:%s'%fixture_id)
 			fresh = rp.hgetall(players+':fresh:%s'%fixture_id)
 			if dict_diff(old,fresh):
+				print "there's a diff. Pushing."
 				diff_update[players] = dict_diff(old,fresh)
 				r.set('livefpl_status','live')
 				push_data(players,dict_diff(old,fresh),fixture_id)
+				rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
+			else:
+				print "no diff. Not pushing"
 		else:
 			rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
+			print "old hash for %s doesn't exist. Renaming."%players
+			scrapped_data[players] = rp.hgetall(players+':old:%s'%fixture_id)
+			print "adding 1st scrap data for %s to scrapped_data"%players
+
 
 	if diff_update:
-		update_lineup_pts.delay(diff_update,fixture_id)
-	if rp.hexists(players+':fresh:%s'%fixture_id, 'MP'):
-		for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
-			rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
-
+		update_lineup_pts.delay(diff_update,fixture_id, "diff_update")
+	if scrapped_data:
+		update_lineup_pts.delay(scrapped_data,fixture_id, "1st scrap")
 
 @celery.task(ignore_result=True)
 def add_data_db(team_id):
@@ -145,16 +154,17 @@ def add_data_db(team_id):
 
 
 @celery.task(ignore_result=True)
-def update_lineup_pts(dict_update,fixture_id):
-	print "This is the dict"
+def update_lineup_pts(dict_update,fixture_id, who):
+	print "This is the dict from %s"%who
 	print dict_update
 	for player_update in dict_update:
-		if 'TP' in dict_update[player_update] and player_update:
+		if 'TP' in dict_update[player_update]:
 			for team_id in r.smembers('allteams'):
 				old_gwpts = int(r.hget('team:%s'%team_id, 'gwpts'))
 				old_tp = int(rp.hget(player_update+':old:%s'%fixture_id, 'TP'))
 				old_cappts = int(r.hget('team:%s'%team_id, 'cappts'))
 				if player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update != r.hget('team:%s'%team_id,'captain'):
+					print "increasing gwpts of team %s by %s pts"%(team_id, dict_update[player_update]['TP'])
 					r.hincrby('team:%s'%team_id, 'gwpts', int(dict_update[player_update]['TP'])) 
 				elif player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update == r.hget('team:%s'%team_id,'captain'):
 					r.hset('team:%s'%team_id, 'cappts', 0)
@@ -169,7 +179,9 @@ def update_lineup_pts(dict_update,fixture_id):
 
 				if old_gwpts != int(r.hget('team:%s'%team_id, 'gwpts')):
 					incr = int(r.hget('team:%s'%team_id, 'gwpts')) - old_gwpts 
+					print "increasing team %s by %s"%(team_id, incr)
 					r.hincrby('team:%s'%team_id,'totalpts', incr)
 					for league in r.hgetall('team:%s:leagues'%team_id):
 						r.hincrby('team:%s:leagues'%team_id, league, incr)
+	print "done Updating the %s teams in DB."%len(r.smembers('allteams'))
 

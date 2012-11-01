@@ -4,10 +4,11 @@ import os
 app = Flask(__name__)
 
 
-@app.route('/')
+@app.route('/01')
 def fixture():
-	i = 3
-	return render_template('updating.html') 
+	i = 5
+
+	return render_template('update%s.html'%str(i))
 
 
 if __name__ == '__main__':

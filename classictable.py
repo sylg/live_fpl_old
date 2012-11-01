@@ -57,7 +57,7 @@ def getlineup(teamid, gw):
 		r.hset('team:%s'%teamid, 'captain', captain )
 		r.hset('team:%s'%teamid,'vc',vc)
 		r.hset('team:%s'%teamid,'cappts',0)
-
+		print "finished getting lineup for team %s"%teamid
 	else:
 		print "Error got status code:%s" % response.status_code
 
@@ -113,6 +113,13 @@ def update_gwpts(team):
 		r.hincrby('team:%s'%team, 'totalpts', r.hget('team:%s'%team, 'gwpts') )
 		for league in r.hgetall('team:%s:leagues'%team):
 			r.hincrby('team:%s:leagues'%team, league, r.hget('team:%s'%team, 'gwpts') )
+		print "finished update gwpts for team %s"%team
+	else:
+		if int(r.hget('team:%s'%team, 'gwpts')) != int(r.hget('team:%s'%team, 'scrapped_gwpts')):
+			print "the gwpts and scrapped_gwpts are different "
+		else:
+			print "not updating because livefpl_status:%s"%r.get('livefpl_status')
+
 
 
 
