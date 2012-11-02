@@ -23,7 +23,7 @@ def dict_diff(dict_a, dict_b):
     ])
 
 
-@periodic_task(run_every=crontab(minute='*' ,hour='*'),ignore_result=True)
+@periodic_task(run_every=crontab(minute='5' ,hour='*'),ignore_result=True)
 def fplupdating():
 	url = 'http://fantasy.premierleague.com/fixtures/'
 	response = requests.get(url, headers=headers)
@@ -132,11 +132,9 @@ def scrapper(fixture_id):
 				diff_update[players] = dict_diff(old,fresh)
 				r.set('livefpl_status','live')
 				push_data(players,dict_diff(old,fresh),fixture_id)
-				#rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
 			else:
 				print "no diff. Not pushing"
 		else:
-			#rp.rename(players+':fresh:%s'%fixture_id, players+':old:%s'%fixture_id)
 			print "old hash for %s doesn't exist. Renaming."%players
 			scrapped_data[players] = rp.hgetall(players+':fresh:%s'%fixture_id)
 			print "adding 1st scrap data for %s to scrapped_data"%players
@@ -189,6 +187,4 @@ def update_lineup_pts(dict_update,fixture_id, who):
 		rp.rename(player_update+':fresh:%s'%fixture_id, player_update+':old:%s'%fixture_id)
 
 	print "done Updating the %s teams in DB."%len(r.smembers('allteams'))
-
-
 

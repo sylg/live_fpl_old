@@ -4,11 +4,10 @@ import os
 app = Flask(__name__)
 
 
-@app.route('/01')
-def fixture():
-	i = 2
+@app.route('/<int:fixtureid>/')
+def fixture(fixtureid):
 
-	return render_template('update%s.html'%str(i))
+	return open(os.getcwd()+'/static/%s/update0.html'%int(fixtureid)).read()
 
 
 if __name__ == '__main__':

@@ -34,8 +34,6 @@ def live():
 		league_data.append('None')
 
 	leaguename = r.hget('league:%s:info'%league_id, 'leaguename')
-
-
 	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1), league_data=league_data,currentgw=r.get('currentgw'), team_id=team_id,leagues=leagues, leaguename=leaguename,league_id=league_id)
 
 @app.route("/status",methods=['GET'])
