@@ -23,7 +23,7 @@ def dict_diff(dict_a, dict_b):
     ])
 
 
-@periodic_task(run_every=crontab(minute='5' ,hour='*'),ignore_result=True)
+@periodic_task(run_every=crontab(minute='*'),ignore_result=True)
 def fplupdating():
 	url = 'http://fantasy.premierleague.com/fixtures/'
 	response = requests.get(url, headers=headers)
@@ -89,7 +89,7 @@ def get_fixture_ids():
 				r.lpush('fixture_ids', fixture_id)
 
 
-@periodic_task(run_every=crontab(minute='*', hour='*',day_of_week='saturday,sunday,monday,tuesday,wednesday,thursday'), ignore_result=True)
+@periodic_task(run_every=crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday,thursday'), ignore_result=True)
 def create_scrapper():
 	if r.llen('fixture_ids') != 0:
 		for ids in r.lrange('fixture_ids',0, -1):
