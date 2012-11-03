@@ -159,11 +159,17 @@ def update_lineup_pts(dict_update,fixture_id, who):
 		if 'TP' in dict_update[player_update]:
 			for team_id in r.smembers('allteams'):
 				old_gwpts = int(r.hget('team:%s'%team_id, 'gwpts'))
+				
 				if rp.exists(player_update+':old:%s'%fixture_id):
 					old_tp = int(rp.hget(player_update+':old:%s'%fixture_id, 'TP'))
 				else:
 					old_tp = 0
-				old_cappts = int(r.hget('team:%s'%team_id, 'cappts'))
+
+				if r.exists('team:%s'%team_id, 'cappts'):	
+					old_cappts = int(r.hget('team:%s'%team_id, 'cappts'))
+				else:
+					old_cappts = 0
+
 				if player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update != r.hget('team:%s'%team_id,'captain'):
 					print "increasing gwpts of team %s by %s pts"%(team_id, dict_update[player_update]['TP'])
 					r.hincrby('team:%s'%team_id, 'gwpts', int(dict_update[player_update]['TP']) - old_tp ) 
