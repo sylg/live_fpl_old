@@ -26,7 +26,7 @@
 </div>
     <div class="hero-unit">
       <h1>LiveFPL</h1>
-      <p>For Mofos eyes only.</p>
+      <p>Alpha Version. Lots of Bugs, Not pretty.</p>
       <form id="live" class="form-inline">
         <label>Your Team ID</label>
           <input id="team_id" type="text" name="team_id" placeholder="ex: 37828">
@@ -61,8 +61,6 @@
 </div>
 
 <script type="text/javascript">
-    // Flash fallback logging - don't include this in production
-WEB_SOCKET_DEBUG = true;
 var pusher = new Pusher('b2c9525770d59267a6a2');
 
 $('#live').submit(function(){
