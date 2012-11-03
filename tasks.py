@@ -68,7 +68,7 @@ def livefpl_status():
 	stop =  html.find('<div class="ismHomeMarginTop">')
 	html = html[start:stop]
 	soup = BeautifulSoup(html)
-	if "Live" in [str(td.string) for td in soup.find_all('td', {'class':'ismFinished'})]:
+	if "Live" in [str(td.string) for td in soup.find_all('td', {'class':'ismInProgress'})]:
 		r.set('livefpl_status','Live')
 	else:
 		r.set('livefpl_status','Offline')

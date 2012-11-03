@@ -17,10 +17,13 @@ celery = Celery('tasks', broker=redis_url, backend=redis_url)
 
 
 
-@periodic_task(run_every=crontab(minute='*' ,hour='*'),ignore_result=True)
+@periodic_task(run_every=crontab(minute='*'),ignore_result=True)
 def unit_testing_scrap():
+	print r.get('scrapmode')
+	print r.exists('fixture_ids')
 	if r.get('scrapmode') == 'ON' and r.exists('fixture_ids'):
 		for fixture in r.lrange('fixture_ids', 0, -1):
+			print fixture
 			if not rs.exists('scrapcounter:%s'%fixture):
 				rs.set('scrapcounter:%s'%fixture,0)
 			if not os.path.exists(os.getcwd()+'/%s/'%fixture):
