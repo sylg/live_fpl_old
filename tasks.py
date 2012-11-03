@@ -97,8 +97,8 @@ def create_scrapper():
 
 @celery.task(ignore_result=True)
 def scrapper(fixture_id):
-	url = 'http://0.0.0.0:5001/%s'%fixture_id
-	#url = 'http://fantasy.premierleague.com/fixture/%s/' %fixture_id
+	#url = 'http://0.0.0.0:5001/fixture/%s/'%fixture_id
+	url = 'http://fantasy.premierleague.com/fixture/%s/' %fixture_id
 	response = requests.get(url, headers=headers)
 	html = response.text
 	soup = BeautifulSoup(html)

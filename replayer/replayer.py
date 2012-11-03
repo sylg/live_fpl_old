@@ -4,7 +4,7 @@ import os
 app = Flask(__name__)
 
 
-@app.route('/<int:fixtureid>/')
+@app.route('/fixture/<int:fixtureid>/')
 def fixture(fixtureid):
 
 	return open(os.getcwd()+'/static/%s/update0.html'%int(fixtureid)).read()
