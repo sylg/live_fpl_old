@@ -9,6 +9,7 @@ celery==3.0.10
 celery-with-redis==3.0
 distribute==0.6.27
 kombu==2.4.7
+mechanize==0.2.5
 pusher==0.6
 python-dateutil==1.5
 pytz==2012d
