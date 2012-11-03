@@ -109,8 +109,9 @@ def update_gwpts(team):
 						r.hset('team:%s'%team, 'cappts', 0)
 						r.hincrby('team:%s'%team, 'cappts',  int(rp.hget('%s:old:%s'%(players,ids), 'TP'))*2)
 					
+		print "updating point of %s | gwpts by Capts ( %s ) and totalpts by gwpts ( %s ) "%(team,r.hget('team:%s'%team, 'cappts'),r.hget('team:%s'%team, 'gwpts') )
 		r.hincrby('team:%s'%team, 'gwpts', int(r.hget('team:%s'%team, 'cappts')) )
-		r.hincrby('team:%s'%team, 'totalpts', r.hget('team:%s'%team, 'gwpts') )
+		r.hincrby('team:%s'%team, 'totalpts', int(r.hget('team:%s'%team, 'gwpts')) )
 		for league in r.hgetall('team:%s:leagues'%team):
 			r.hincrby('team:%s:leagues'%team, league, r.hget('team:%s'%team, 'gwpts') )
 		print "finished update gwpts for team %s"%team
