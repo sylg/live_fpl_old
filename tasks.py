@@ -124,19 +124,13 @@ def scrapper(fixture_id):
 	scrapped_data = {}
 	for players in r.lrange('lineups:%s' %fixture_id, 0, -1):
 		if rp.hexists('%s:old:%s'%(players,fixture_id), 'MP'):
-			print "old hash for %s exist checking if there's a dif."%players
 			old = rp.hgetall(players+':old:%s'%fixture_id)
 			fresh = rp.hgetall(players+':fresh:%s'%fixture_id)
 			if dict_diff(old,fresh):
-				print "there's a diff. Pushing."
 				diff_update[players] = dict_diff(old,fresh)
 				push_data(players,dict_diff(old,fresh),fixture_id)
-			else:
-				print "no diff. Not pushing"
 		else:
-			print "old hash for %s doesn't exist. Renaming."%players
 			scrapped_data[players] = rp.hgetall(players+':fresh:%s'%fixture_id)
-			print "adding 1st scrap data for %s to scrapped_data"%players
 
 
 	if diff_update:
