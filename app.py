@@ -27,14 +27,15 @@ def live():
 		for team in r.smembers('league:%s'%league_id):
 			league_data.append(r.hgetall('team:%s'%str(team)))
 		for team in league_data:
-			team['id']
 			team['totalpts'] = r.hget('team:%s:leagues'%team['id'], league_id)
+			team['lineup'] = r.lrange('team:%s:lineup'%team['id'],0,-5)
 		league_data = sorted(league_data, key=lambda k: k['totalpts'],reverse=True)
 	else:
 		league_data.append('None')
 
 	leaguename = r.hget('league:%s:info'%league_id, 'leaguename')
-	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1), league_data=league_data,currentgw=r.get('currentgw'), team_id=team_id,leagues=leagues, leaguename=leaguename,league_id=league_id)
+	teamname = r.hget('team:%s'%team_id, 'teamname')
+	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1), league_data=league_data,currentgw=r.get('currentgw'), team_id=team_id,leagues=leagues, leaguename=leaguename,league_id=league_id, teamname=teamname)
 
 @app.route("/status",methods=['GET'])
 def status():
@@ -76,10 +77,11 @@ def update_classic():
 	league_data = []
 	if r.sismember('league:%s'%league_id, "toobig") == 0:
 		for team in r.smembers('league:%s'%league_id):
-			league_data.append(r.hgetall('team:%s'%str(team)))
+			league_data.append(r.hgetall('team:%s'%team))
 		for team in league_data:
-			team['id']
+			# team['id']
 			team['totalpts'] = r.hget('team:%s:leagues'%team['id'], league_id)
+			team['lineup'] = r.lrange('team:%s:lineup'%team['id'],0,-5)
 	return json.dumps(sorted(league_data, key=lambda k: k['totalpts'],reverse=True))
 
 

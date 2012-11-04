@@ -20,13 +20,13 @@ def push_data(name,keys,fixture_id):
 			print "key: %s player: %s ( %s & %s )"%(key,name,old_stats[key], keys[key] )
 			if key in messages and keys[key] != 0:
 				print "sent a push msg for %s with key: %s"%(name,key)
-				msg = '<li><p><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +messages[key]+ '</p></li>'
+				msg = '<li class="pushmsg"><p><span rel="tooltip" title="total point: %s" class="player-name">%s</span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +" "+messages[key]+ '</p></li>'
 				if key == "S":
 					if int(keys[key]) % 3 == 0:
 						p[ticker_channel].trigger('ticker', {'message': msg })
 						r.lpush('pushed_data', msg)
 				elif key =='B':
-					msg = '<li><p><span rel="tooltip" title="total point: %s" class="player-name">%s </span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +'Received %s Bonus point(s)'%keys[key] + '</p></li>'
+					msg = '<li class="pushmsg"><p><span rel="tooltip" title="total point: %s" class="player-name">%s</span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +' Received %s Bonus point(s)'%keys[key] + '</p></li>'
 					p[ticker_channel].trigger('ticker', {'message': msg })
 				else:
 					p[ticker_channel].trigger('ticker', {'message': msg })

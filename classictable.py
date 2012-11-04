@@ -39,6 +39,7 @@ def getlineup(teamid, gw):
 	url = "http://fantasy.premierleague.com/entry/%s/event-history/%s/" % (teamid, gw)
 	response = requests.get(url, headers=headers)
 	if response.status_code == 200:
+		print response.status_code
 		html = response.text
 		tablestart = html.find('<tbody id="ismDataElements">')
 		tableend = html.find('<!-- sponsor -->')
@@ -120,7 +121,6 @@ def update_gwpts(team):
 			print "the gwpts and scrapped_gwpts are different "
 		else:
 			print "not updating because livefpl_status:%s"%r.get('livefpl_status')
-
 
 
 

@@ -23,7 +23,7 @@ def dict_diff(dict_a, dict_b):
     ])
 
 
-@periodic_task(run_every=crontab(minute='*'),ignore_result=True)
+@periodic_task(run_every=crontab(minute='10'),ignore_result=True)
 def fplupdating():
 	url = 'http://fantasy.premierleague.com/fixtures/'
 	response = requests.get(url, headers=headers)
@@ -75,7 +75,7 @@ def livefpl_status():
 
 @periodic_task(run_every=crontab(minute='*',hour='10-21',day_of_week='saturday,sunday,monday,tuesday'), ignore_result=True)
 def get_fixture_ids():
-	if r.get('scrapmode') == 'ON':
+	if r.get('scrapmode') == 'ON' and r.get('livefpl_status') == 'Live':
 		url = 'http://fantasy.premierleague.com/fixtures/'
 		response = requests.get(url, headers=headers)
 		html = response.text
@@ -91,7 +91,7 @@ def get_fixture_ids():
 
 @periodic_task(run_every=crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday,thursday'), ignore_result=True)
 def create_scrapper():
-	if r.llen('fixture_ids') != 0:
+	if r.llen('fixture_ids') != 0 and r.get('livefpl_status') == 'Live':
 		for ids in r.lrange('fixture_ids',0, -1):
 			scrapper.delay(ids)
 
@@ -130,7 +130,6 @@ def scrapper(fixture_id):
 			if dict_diff(old,fresh):
 				print "there's a diff. Pushing."
 				diff_update[players] = dict_diff(old,fresh)
-				r.set('livefpl_status','live')
 				push_data(players,dict_diff(old,fresh),fixture_id)
 			else:
 				print "no diff. Not pushing"
@@ -165,11 +164,7 @@ def update_lineup_pts(dict_update,fixture_id, who):
 				else:
 					old_tp = 0
 
-				if r.hexists('team:%s'%team_id, 'cappts'):	
-					old_cappts = int(r.hget('team:%s'%team_id, 'cappts'))
-				else:
-					old_cappts = 0
-
+				old_cappts = int(r.hget('team:%s'%team_id, 'cappts'))
 				if player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update != r.hget('team:%s'%team_id,'captain'):
 					print "increasing gwpts of team %s by %s pts"%(team_id, dict_update[player_update]['TP'])
 					r.hincrby('team:%s'%team_id, 'gwpts', int(dict_update[player_update]['TP']) - old_tp ) 

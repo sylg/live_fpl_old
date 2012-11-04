@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title>Live page</title>
+	<title>{{ teamname }} | {{ leaguename }} | liveFPL</title>
 
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -59,13 +59,13 @@
 			{% for team in league_data %}
 				{% if team['id'] == team_id %}
 					<tr class="user-team">
-						<td><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
+						<td tid="{{ team['id'] }}" lineup="{{ team['lineup'] }}"><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
 						<td class="gwpts">{{ team['gwpts'] }}</td>
 						<td class="totalpts">{{ team['totalpts']}}</td>
 					</tr>
 				{% else %}
 					<tr>
-						<td><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
+						<td tid="{{ team['id'] }}" lineup="{{ team['lineup'] }}"><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
 						<td class="gwpts">{{ team['gwpts'] }}</td>
 						<td class="totalpts">{{ team['totalpts']}} </td>
 					</tr>
@@ -97,6 +97,7 @@
 </div>
 
 <script type="text/javascript">
+
 function tickerOverflow() {
 	if ($('#update li').length >= 5) {
 		$('.ticker-container').attr('style', 'overflow-y:scroll;');
@@ -146,44 +147,58 @@ window.setInterval(function(){
 }, 60000);
 
 
+//Hover playername highlight team
+
+$('#update li').hover(function(){
+	playerName = $(this).find('.player-name').html();
+	playern = playerName.substring(0,playerName.length-1)
+	$("#xtable tbody td[lineup*='"+playern+"'']").parent().css("background-color","#d9edf7")
+	},
+	function(){
+		$("#xtable tbody td[lineup*='"+playern+"'']").parent().css("background-color","")
+	});
+
+
+
+
 // //Update league table
 var user_team = $('.my-team > td').html();
 
 window.setInterval(function(){
 	
 	$.getJSON('/updateclassic?league_id='+$('h4').attr('id'), function(data) {
-			var cloned = $('#xtable').clone();
-			$.each(data, function(i, values){
-				var teamname = values['teamname'];
-				var gwpts = values['gwpts'];
-				var totalpts = values['totalpts'];
-				cloned.find('tbody tr').each(function(){
-						var tableTeamname = $('#teamname', this).html();
-						if (tableTeamname == teamname){
-							$('.gwpts', this).html(gwpts);
-							$('.totalpts', this).html(totalpts);
-						}
-				});
+		var cloned = $('#xtable').clone();
+		$.each(data, function(i, values){
+			var teamname = values['teamname'];
+			var gwpts = values['gwpts'];
+			var totalpts = values['totalpts'];
+			cloned.find('tbody tr').each(function(){
+					var tableTeamname = $('#teamname', this).html();
+					if (tableTeamname == teamname){
+						$('.gwpts', this).html(gwpts);
+						$('.totalpts', this).html(totalpts);
+					}
 			});
-			cloned.tablesorter({
-				sortList: [[2,1]]
-			 });
-			$('#xtable').rankingTableUpdate(cloned,{
-				animationSettings: {
-							        up: {
-							            left: -25,
-							            backgroundColor: '#CCFFCC'
-							        },
-							        down: {
-							            left: 25,
-							            backgroundColor: '#FFCCCC'
-							        },
-							    }
+		});
+		cloned.tablesorter({
+			sortList: [[2,1]]
+		 });
+		$('#xtable').rankingTableUpdate(cloned,{
+			animationSettings: {
+						        up: {
+						            left: -25,
+						            backgroundColor: '#CCFFCC'
+						        },
+						        down: {
+						            left: 25,
+						            backgroundColor: '#FFCCCC'
+						        },
+						    }
 
-			});
-			$('#xtable [rel=tooltip]').tooltip();
+		});
+		$('#xtable [rel=tooltip]').tooltip();
 	});
-}, 60000);
+}, 10000);
 
 
 
