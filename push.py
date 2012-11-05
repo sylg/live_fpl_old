@@ -10,22 +10,21 @@ messages = { 'A': 'just got an assist',
 			  'S': 'just made 3 saves, +1pt',
 }
 
-def push_data(name,keys,fixture_id):
-	print "For player: %s in fixture: %s"%(name, fixture_id)
+def push_data(pid,keys):
 	print "Pushing data: %s"%keys
-	old_stats = rp.hgetall('%s:old:%s'%(name,fixture_id))
+	old_stats = rp.hgetall('%s:old'%pid)
 	old_tp = old_stats['TP']
 	if 'TP' in keys and keys['TP'] != old_tp:
 		for key in keys:
 			if key in messages and keys[key] != 0:
-				msg = '<li class="pushmsg"><p><span rel="tooltip" title="total point: %s" class="player-name">%s</span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +" "+messages[key]+ '</p></li>'
+				msg = '<li class="pushmsg"><p><span rel="tooltip" title="total point: %s" class="player-name" pid ="%s">%s</span>' % (rp.hget('%s:fresh'%pid, 'TP'),pid, keys['playername']) +" "+messages[key]+ '</p></li>'
 				if key == "S":
 					if int(keys[key]) % 3 == 0:
 						p[ticker_channel].trigger('ticker', {'message': msg })
 						r.lpush('pushed_data', msg)
 				elif key =='B':
 					print "bonus point"
-					msg = '<li class="pushmsg"><p><span rel="tooltip" title="total point: %s" class="player-name">%s</span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +' Received %s Bonus point(s)'%keys[key] + '</p></li>'
+					msg = '<li class="pushmsg"><p><span rel="tooltip" title="total point: %s" class="player-name" pid ="%s">%s</span>' % (rp.hget('%s:fresh'%pid, 'TP'),pid, keys['playername']) +' Received %s Bonus point(s)'%keys[key] + '</p></li>'
 					p[ticker_channel].trigger('ticker', {'message': msg })
 				else:
 					p[ticker_channel].trigger('ticker', {'message': msg })

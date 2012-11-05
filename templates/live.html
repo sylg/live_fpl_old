@@ -111,11 +111,11 @@ function tickerOverflow() {
 
 function playerHiglight(){
 	$('#update li').hover(function(){
-		playerName = $(this).find('.player-name').html();
-		$("#xtable tbody td[lineup*='"+playerName+"'']").parent().css("background-color","#d9edf7")
+		playerId = $(this).attr("pid");
+		$("#xtable tbody td[lineup*='"+playerId+"'']").parent().css("background-color","#d9edf7")
 		},
 		function(){
-			$("#xtable tbody td[lineup*='"+playerName+"'']").parent().css("background-color","")
+			$("#xtable tbody td[lineup*='"+playerId+"'']").parent().css("background-color","")
 	});
 };
 
@@ -139,7 +139,7 @@ $(document).ready(function(){
 
 //Push update for ticker
 var pusher = new Pusher('b2c9525770d59267a6a2');
-	    var channel = pusher.subscribe('prod_ticker');
+	    var channel = pusher.subscribe('dev_ticker');
 	    channel.bind('ticker', function(data) {
 	    	tickerOverflow();
     		$(data.message).prependTo('#update').hide();

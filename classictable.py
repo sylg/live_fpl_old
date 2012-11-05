@@ -3,6 +3,8 @@ from push import *
 import unicodedata
 import requests
 from settings import *
+import re
+import pickle
 
 def getteams(leagueid):
 	url = 'http://fantasy.premierleague.com/my-leagues/%s/standings/' % leagueid
@@ -27,11 +29,11 @@ def getteams(leagueid):
 				r.sadd('allteams', team_id)
 				r.hset('league:%s:info'%leagueid, 'players', r.scard('league:%s'%leagueid))
 				if gw_pts != 0:
-						total_pts = total_pts - gw_pts
-						gw_pts = 0
+					total_pts = total_pts - gw_pts
+					gw_pts = 0
 				r.hset('team:%s:leagues'%team_id,leagueid, total_pts)
 				if r.exists('team:%s'%team_id) == False:
-						r.hmset('team:%s' %team_id,{'id':team_id, 'totalpts':total_pts, 'gwpts':gw_pts, 'teamname':teamname,'scrapped_gwpts':gw_pts})
+					r.hmset('team:%s' %team_id,{'id':team_id, 'totalpts':total_pts, 'gwpts':gw_pts, 'teamname':teamname,'scrapped_gwpts':gw_pts})
 		else:
 			print "Too big. Skip."
 			r.sadd('league:%s'%leagueid,"toobig")
@@ -54,10 +56,11 @@ def getlineup(teamid, gw):
 		vcstart =html.find('<img width="16" height="16" alt="vice-captain" src="http://cdn.ismfg.net/static/plfpl/img/icons/vice_captain.png" title="vice-captain" class="ismViceCaptain ismViceCaptainOn">')
 		vcend =html.find('<!-- end ismPitch -->')
 		soup3 = BeautifulSoup(html[vcstart:vcend])
-		captain = str(soup2.find('dt').span.string).strip()
-		vc = str(soup3.find('dt').span.string).strip()
+		captain = str(soup2.find('a')['href'].strip('#'))
+		vc = str(soup3.find('a')['href'].strip('#'))
+		lineup = []
 		for row in soup1.find_all('tr'):
-			r.rpush('team:%s:lineup'%teamid,str(row.td.string))
+			r.rpush('team:%s:lineup'%teamid,re.findall(r"\d{1,3}", row["id"])[0])
 
 		r.hset('team:%s'%teamid, 'captain', captain )
 		r.hset('team:%s'%teamid,'vc',vc)
@@ -110,14 +113,13 @@ def update_gwpts(team):
 	#if int(r.hget('team:%s'%team, 'gwpts')) == int(r.hget('team:%s'%team, 'scrapped_gwpts')) and r.get('livefpl_status') == 'Live':
 	if int(r.hget('team:%s'%team, 'gwpts')) == int(r.hget('team:%s'%team, 'scrapped_gwpts')):
 		for players in r.lrange('team:%s:lineup'%team,0, -5):
-			for ids in r.lrange('fixture_ids',0,-1):
-				if rp.exists('%s:old:%s'%(players,ids)):
-					if players != r.hget('team:%s'%team,'captain'):
-						print "%s is a player, updating gwpts by %s"%(players, rp.hget('%s:old:%s'%(players,ids), 'TP'))
-						r.hincrby('team:%s'%team, 'gwpts', rp.hget('%s:old:%s'%(players,ids), 'TP')) 
-					elif players == r.hget('team:%s'%team,'captain'):
-						print "%s is the captain, updating cappts by %s"%(players, rp.hget('%s:old:%s'%(players,ids), 'TP'))
-						r.hincrby('team:%s'%team, 'cappts',  int(rp.hget('%s:old:%s'%(players,ids), 'TP'))*2)
+			if rp.exists('%s:old'%players):
+				if players != r.hget('team:%s'%team,'captain'):
+					print "%s is a player, updating gwpts by %s"%(players, rp.hget('%s:old'%players, 'TP'))
+					r.hincrby('team:%s'%team, 'gwpts', rp.hget('%s:old'%players, 'TP')) 
+				elif players == r.hget('team:%s'%team,'captain'):
+					print "%s is the captain, updating cappts by %s"%players, rp.hget('%s:old'%players, 'TP')
+					r.hincrby('team:%s'%team, 'cappts',  int(rp.hget('%s:old'%players, 'TP'))*2)
 					
 		print "updating point of %s | gwpts by Capts ( %s ) and totalpts by gwpts ( %s ) "%(team,r.hget('team:%s'%team, 'cappts'),r.hget('team:%s'%team, 'gwpts') )
 		r.hincrby('team:%s'%team, 'gwpts', int(r.hget('team:%s'%team, 'cappts')) )
