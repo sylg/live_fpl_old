@@ -107,8 +107,8 @@ def add_data(teamid,current_gw):
 			print "already exist"
 
 def update_gwpts(team):
-	#if int(r.hget('team:%s'%team, 'gwpts')) == int(r.hget('team:%s'%team, 'scrapped_gwpts')) and r.get('livefpl_status') == 'Live'
-	if int(r.hget('team:%s'%team, 'gwpts')) == int(r.hget('team:%s'%team, 'scrapped_gwpts')):
+	if int(r.hget('team:%s'%team, 'gwpts')) == int(r.hget('team:%s'%team, 'scrapped_gwpts')) and r.get('livefpl_status') == 'Live'
+	#if int(r.hget('team:%s'%team, 'gwpts')) == int(r.hget('team:%s'%team, 'scrapped_gwpts')):
 		for players in r.lrange('team:%s:lineup'%team,0, -5):
 			for ids in r.lrange('fixture_ids',0,-1):
 				if rp.exists('%s:old:%s'%(players,ids)):

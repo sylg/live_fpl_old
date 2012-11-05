@@ -70,13 +70,13 @@ def livefpl_status():
 	if "Live" in [str(td.string) for td in soup.find_all('td', {'class':'ismInProgress'})]:
 		r.set('livefpl_status','Live')
 	else:
-		#r.set('livefpl_status','Offline')
-		r.set('livefpl_status','Live')
+		r.set('livefpl_status','Offline')
+		#r.set('livefpl_status','Live')
 
 @periodic_task(run_every=timer, ignore_result=True)
 def get_fixture_ids():
-	#if r.get('scrapmode') == 'ON' and r.get('livefpl_status') == 'Live':
-	if r.get('scrapmode') == 'ON':
+	if r.get('scrapmode') == 'ON' and r.get('livefpl_status') == 'Live':
+	#if r.get('scrapmode') == 'ON':
 		url = 'http://fantasy.premierleague.com/fixtures/'
 		response = requests.get(url, headers=headers)
 		html = response.text
