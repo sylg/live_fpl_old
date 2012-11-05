@@ -1,7 +1,7 @@
 import redis
 import pusher
 import os
-
+from datetime import timedelta
 
 ## PUSHER ##
 ############
@@ -36,6 +36,12 @@ rp = redis.from_url(redis_url, db=1)
 #Requests Headers
 
 headers = {'User-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'}
+
+
+#Period Task timer
+
+timer = crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday,thursday')
+#timer = timedelta(seconds=30)
 
 
 

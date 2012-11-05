@@ -1,5 +1,4 @@
 from celery import Celery
-from datetime import timedelta
 from celery.schedules import crontab
 from celery.decorators import periodic_task
 from bs4 import BeautifulSoup
@@ -23,7 +22,7 @@ def dict_diff(dict_a, dict_b):
     ])
 
 
-@periodic_task(run_every=crontab(minute='10'),ignore_result=True)
+@periodic_task(run_every=timer,ignore_result=True)
 def fplupdating():
 	url = 'http://fantasy.premierleague.com/fixtures/'
 	response = requests.get(url, headers=headers)
@@ -71,11 +70,13 @@ def livefpl_status():
 	if "Live" in [str(td.string) for td in soup.find_all('td', {'class':'ismInProgress'})]:
 		r.set('livefpl_status','Live')
 	else:
-		r.set('livefpl_status','Offline')
+		#r.set('livefpl_status','Offline')
+		r.set('livefpl_status','Live')
 
-@periodic_task(run_every=crontab(minute='*',hour='10-21',day_of_week='saturday,sunday,monday,tuesday'), ignore_result=True)
+@periodic_task(run_every=timer, ignore_result=True)
 def get_fixture_ids():
-	if r.get('scrapmode') == 'ON' and r.get('livefpl_status') == 'Live':
+	#if r.get('scrapmode') == 'ON' and r.get('livefpl_status') == 'Live':
+	if r.get('scrapmode') == 'ON':
 		url = 'http://fantasy.premierleague.com/fixtures/'
 		response = requests.get(url, headers=headers)
 		html = response.text
@@ -89,7 +90,7 @@ def get_fixture_ids():
 				r.lpush('fixture_ids', fixture_id)
 
 
-@periodic_task(run_every=crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday,thursday'), ignore_result=True)
+@periodic_task(run_every=timer, ignore_result=True)
 def create_scrapper():
 	if r.llen('fixture_ids') != 0 and r.get('livefpl_status') == 'Live':
 		for ids in r.lrange('fixture_ids',0, -1):
@@ -133,6 +134,7 @@ def scrapper(fixture_id):
 			scrapped_data[players] = rp.hgetall(players+':fresh:%s'%fixture_id)
 
 
+
 	if diff_update:
 		update_lineup_pts.delay(diff_update,fixture_id, "diff_update")
 	if scrapped_data:
@@ -146,40 +148,85 @@ def add_data_db(team_id):
 
 @celery.task(ignore_result=True)
 def update_lineup_pts(dict_update,fixture_id, who):
-	print "This is the dict from %s"%who
-	print dict_update
-	for player_update in dict_update:
-		if 'TP' in dict_update[player_update]:
-			for team_id in r.smembers('allteams'):
-				old_gwpts = int(r.hget('team:%s'%team_id, 'gwpts'))
+	# print "This is the dict from %s"%who
+	# print dict_update
+	# for player_update in dict_update:
+	# 	print "lets see who has %s"%player_update
+	# 	if 'TP' in dict_update[player_update]:
+	# 		for team_id in r.smembers('allteams'):
+	# 			print "updating team %s"%team_id
+	# 			old_gwpts = int(r.hget('team:%s'%team_id, 'gwpts'))
+	# 			print "old_gwpts for team %s is %s"%(team_id,old_gwpts)
+	# 			if r.exists(player_update+':old:%s'%fixture_id):
+	# 				old_tp = int(rp.hget(player_update+':old:%s'%fixture_id, 'TP'))
+	# 			else:
+	# 				print "old for %s doesn't exists"%player_update
+	# 				old_tp = 0
 
-				if rp.exists(player_update+':old:%s'%fixture_id):
+	# 			print "old_tp for player_update is %s"% old_tp
+
+	# 			old_cappts = int(r.hget('team:%s'%team_id, 'cappts'))
+	# 			print "old_cappts for team %s is %s"%(team_id,old_cappts)
+	# 			if player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update != r.hget('team:%s'%team_id,'captain'):
+	# 				print "%s is a player of team %s. Updating gwpts by %s pts"%(player_update,team_id,dict_update[player_update]['TP'] )
+	# 				r.hincrby('team:%s'%team_id, 'gwpts', int(dict_update[player_update]['TP']) - old_tp ) 
+	# 			elif player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update == r.hget('team:%s'%team_id,'captain'):
+	# 				print "%s is the captain of the team %s. Updating cappts by %s pts"%(player_update, team_id, str(int(dict_update[player_update]['TP'])*2))
+	# 				r.hset('team:%s'%team_id, 'cappts', 0)
+	# 				r.hincrby('team:%s'%team_id, 'cappts', int(dict_update[player_update]['TP'])*2)
+					
+
+	# 			if old_cappts != int(r.hget('team:%s'%team_id, 'cappts')):
+	# 				incr = int(r.hget('team:%s'%team_id, 'cappts')) - old_cappts
+	# 				print "old_cappts ( %s ) is different from cappts ( %s ), updating by %s"%(old_cappts,r.hget('team:%s'%team_id, 'cappts'), incr)
+	# 				r.hincrby('team:%s'%team_id,'gwpts', incr)
+
+
+	# 			if old_gwpts != int(r.hget('team:%s'%team_id, 'gwpts')):
+	# 				incr = int(r.hget('team:%s'%team_id, 'gwpts')) - old_gwpts 
+	# 				print "increasing totalpts of team %s by %s"%(team_id, incr)
+	# 				r.hincrby('team:%s'%team_id,'totalpts', incr)
+	# 				for league in r.hgetall('team:%s:leagues'%team_id):
+	# 					r.hincrby('team:%s:leagues'%team_id, league, incr)
+	# 	rp.rename(player_update+':fresh:%s'%fixture_id, player_update+':old:%s'%fixture_id)
+
+
+
+
+	for team_id in r.smembers('allteams'):
+		print "updating team %s"%team_id
+		old_cappts = int(r.hget('team:%s'%team_id, 'cappts'))
+		old_gwpts = int(r.hget('team:%s'%team_id, 'gwpts'))
+		print "old_gwpts is %s"%(old_gwpts)		
+		print "old_cappts is %s"%(old_cappts)
+		for player_update in dict_update:
+			if 'TP' in dict_update[player_update]:
+				if r.exists(player_update+':old:%s'%fixture_id):
 					old_tp = int(rp.hget(player_update+':old:%s'%fixture_id, 'TP'))
 				else:
 					old_tp = 0
 
-				old_cappts = int(r.hget('team:%s'%team_id, 'cappts'))
 				if player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update != r.hget('team:%s'%team_id,'captain'):
-					print "increasing gwpts of team %s by %s pts"%(team_id, dict_update[player_update]['TP'])
+					print "%s is a player of team %s. Updating gwpts by %s pts"%(player_update,team_id,dict_update[player_update]['TP'] )
 					r.hincrby('team:%s'%team_id, 'gwpts', int(dict_update[player_update]['TP']) - old_tp ) 
 				elif player_update in r.lrange('team:%s:lineup'%team_id, 0, -5) and player_update == r.hget('team:%s'%team_id,'captain'):
+					print "%s is the captain of the team %s. Updating cappts by %s pts"%(player_update, team_id, str(int(dict_update[player_update]['TP'])*2))
 					r.hset('team:%s'%team_id, 'cappts', 0)
 					r.hincrby('team:%s'%team_id, 'cappts', int(dict_update[player_update]['TP'])*2)
-					
 
-				if old_cappts != int(r.hget('team:%s'%team_id, 'cappts')):
-					r.hincrby('team:%s'%team_id,'gwpts', -old_cappts)
-					incr = int(r.hget('team:%s'%team_id, 'cappts'))
-					r.hincrby('team:%s'%team_id,'gwpts', incr)
+		if old_cappts != int(r.hget('team:%s'%team_id, 'cappts')):
+			incr = int(r.hget('team:%s'%team_id, 'cappts')) - old_cappts
+			print "old_cappts ( %s ) is different from cappts ( %s ), updating by %s"%(old_cappts,r.hget('team:%s'%team_id, 'cappts'), incr)
+			r.hincrby('team:%s'%team_id,'gwpts', incr)
 
+		if old_gwpts != int(r.hget('team:%s'%team_id, 'gwpts')):
+			incr = int(r.hget('team:%s'%team_id, 'gwpts')) - old_gwpts 
+			print "increasing totalpts of team %s by %s"%(team_id, incr)
+			r.hincrby('team:%s'%team_id,'totalpts', incr)
+			for league in r.hgetall('team:%s:leagues'%team_id):
+				r.hincrby('team:%s:leagues'%team_id, league, incr)
 
-				if old_gwpts != int(r.hget('team:%s'%team_id, 'gwpts')):
-					incr = int(r.hget('team:%s'%team_id, 'gwpts')) - old_gwpts 
-					print "increasing team %s by %s"%(team_id, incr)
-					r.hincrby('team:%s'%team_id,'totalpts', incr)
-					for league in r.hgetall('team:%s:leagues'%team_id):
-						r.hincrby('team:%s:leagues'%team_id, league, incr)
+	for player_update in dict_update:
 		rp.rename(player_update+':fresh:%s'%fixture_id, player_update+':old:%s'%fixture_id)
 
 	print "done Updating the %s teams in DB."%len(r.smembers('allteams'))
-

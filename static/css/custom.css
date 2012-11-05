@@ -20,7 +20,7 @@
 /* Classic League Table */
 
 .user-team {
-	background-color: #CCFFCC !important;
+	background-color: #CCFFCC;
 }
 
 #xtable tbody td a:hover {

@@ -17,25 +17,19 @@ def push_data(name,keys,fixture_id):
 	old_tp = old_stats['TP']
 	if 'TP' in keys and keys['TP'] != old_tp:
 		for key in keys:
-			print "key: %s player: %s ( %s & %s )"%(key,name,old_stats[key], keys[key] )
 			if key in messages and keys[key] != 0:
-				print "sent a push msg for %s with key: %s"%(name,key)
 				msg = '<li class="pushmsg"><p><span rel="tooltip" title="total point: %s" class="player-name">%s</span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +" "+messages[key]+ '</p></li>'
 				if key == "S":
 					if int(keys[key]) % 3 == 0:
 						p[ticker_channel].trigger('ticker', {'message': msg })
 						r.lpush('pushed_data', msg)
 				elif key =='B':
+					print "bonus point"
 					msg = '<li class="pushmsg"><p><span rel="tooltip" title="total point: %s" class="player-name">%s</span>' % (rp.hget(name+':fresh:%s'%fixture_id, 'TP'), name) +' Received %s Bonus point(s)'%keys[key] + '</p></li>'
 					p[ticker_channel].trigger('ticker', {'message': msg })
 				else:
 					p[ticker_channel].trigger('ticker', {'message': msg })
 					r.lpush('pushed_data', msg)
-	else:
-		if 'TP' not in keys:
-			print "TP not in diff for %s"%name
-		else:
-			print "not doing anything for %s because TP is same than old TP %s & %s"%(name,keys['TP'],old_tp)
 
 def push_league(team_id):
 	returned_data = {}

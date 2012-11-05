@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title>{{ teamname }} | {{ leaguename }} | liveFPL</title>
+	<title>{{ leaguename }} | {{ teamname }} | liveFPL</title>
 
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -59,13 +59,13 @@
 			{% for team in league_data %}
 				{% if team['id'] == team_id %}
 					<tr class="user-team">
-						<td tid="{{ team['id'] }}" lineup="{{ team['lineup'] }}"><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
+						<td lineup="{{ team['lineup'] }}"><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
 						<td class="gwpts">{{ team['gwpts'] }}</td>
 						<td class="totalpts">{{ team['totalpts']}}</td>
 					</tr>
 				{% else %}
 					<tr>
-						<td tid="{{ team['id'] }}" lineup="{{ team['lineup'] }}"><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
+						<td lineup="{{ team['lineup'] }}"><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
 						<td class="gwpts">{{ team['gwpts'] }}</td>
 						<td class="totalpts">{{ team['totalpts']}} </td>
 					</tr>
@@ -107,6 +107,19 @@ function tickerOverflow() {
 	}
 };
 
+//Hover playername highlight team
+
+function playerHiglight(){
+	$('#update li').hover(function(){
+		playerName = $(this).find('.player-name').html();
+		$("#xtable tbody td[lineup*='"+playerName+"'']").parent().css("background-color","#d9edf7")
+		},
+		function(){
+			$("#xtable tbody td[lineup*='"+playerName+"'']").parent().css("background-color","")
+	});
+};
+
+
 //Page SETUP
 $(document).ready(function(){
 	//Activate tooltip
@@ -118,6 +131,7 @@ $(document).ready(function(){
 	});
 	// Fix Ticker update overflow
 	tickerOverflow();
+	playerHiglight()
 });
 
 
@@ -131,6 +145,7 @@ var pusher = new Pusher('b2c9525770d59267a6a2');
     		$(data.message).prependTo('#update').hide();
     		$('span').tooltip();
     		$('li').show(600);
+    		playerHiglight()
 	    });
 
 
@@ -147,16 +162,6 @@ window.setInterval(function(){
 }, 60000);
 
 
-//Hover playername highlight team
-
-$('#update li').hover(function(){
-	playerName = $(this).find('.player-name').html();
-	playern = playerName.substring(0,playerName.length-1)
-	$("#xtable tbody td[lineup*='"+playern+"'']").parent().css("background-color","#d9edf7")
-	},
-	function(){
-		$("#xtable tbody td[lineup*='"+playern+"'']").parent().css("background-color","")
-	});
 
 
 
