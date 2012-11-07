@@ -10,26 +10,6 @@ from push import *
 
 app = Flask(__name__)
 
-def fill_playerdb():
-	i = 1
-	while i <= 622:
-		url = "http://fantasy.premierleague.com/web/api/elements/%s/" %i
-		print url
-		response = requests.get(url, headers=headers)
-		if response.status_code == 200:
-			json = response.json
-			web_name = json['web_name']
-			position = json['type_name']
-			teamname = json['team_name']
-	 		rdb.hmset(i,{'web_name':web_name, 'position':position,'teamname':teamname})
-	 	else:
-	 		print "got errore %s"%response.status_code
-	 	rdb.rpush('player_ids', i)
-		i += 1
-
-
-
-
 
 @app.route("/", methods=['GET'])
 def index():
@@ -112,4 +92,3 @@ if __name__ == '__main__':
 	# Bind to PORT if defined, otherwise default to 5000.
 	port = int(os.environ.get('PORT', 5000))
 	app.run(host='0.0.0.0', port=port, debug=True)
-	fill_playerdb()

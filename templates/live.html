@@ -59,13 +59,13 @@
 			{% for team in league_data %}
 				{% if team['id'] == team_id %}
 					<tr class="user-team">
-						<td lineup="{{ team['lineup'] }}"><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
+						<td data-lineup="{{ team['lineup'] }}"><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
 						<td class="gwpts">{{ team['gwpts'] }}</td>
 						<td class="totalpts">{{ team['totalpts']}}</td>
 					</tr>
 				{% else %}
 					<tr>
-						<td lineup="{{ team['lineup'] }}"><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
+						<td data-lineup="{{ team['lineup'] }}"><a id="teamname" href="http://fantasy.premierleague.com/entry/{{team['id']}}/event-history/{{currentgw}}/" target="_blank">{{ team['teamname'] }}</a></td>
 						<td class="gwpts">{{ team['gwpts'] }}</td>
 						<td class="totalpts">{{ team['totalpts']}} </td>
 					</tr>
@@ -112,10 +112,10 @@ function tickerOverflow() {
 function playerHiglight(){
 	$('#update li').hover(function(){
 		playerId = $(this).find('span').attr("pid");
-		$("#xtable tbody td[lineup*='"+playerId+"'']").parent().css("background-color","#d9edf7")
+		$("#xtable tbody td[data-lineup*='\'"+playerId+"\'']").parent().css("background-color","#d9edf7")
 		},
 		function(){
-			$("#xtable tbody td[lineup*='"+playerId+"'']").parent().css("background-color","")
+			$("#xtable tbody td[data-lineup*='\'"+playerId+"\'']").parent().css("background-color","")
 	});
 };
 

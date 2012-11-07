@@ -40,21 +40,23 @@ def fill_playerdb():
 	 	elif response.status_code == 500:
 	 		no_more +=1
 		i += 1
+	print "Done updating Player Database"
 
 
 
-@periodic_task(run_every=timer,ignore_result=True)
-def fplupdating():
-	url = 'http://fantasy.premierleague.com/fixtures/'
-	response = requests.get(url, headers=headers)
-	if len(response.history) != 0:
-		print "livefpl website is updating do nothing"
-		r.set('scrapmode', 'OFF')
-	else:
-		print "livefpl website is live, go scrap"
-		r.set('scrapmode', 'ON')
-		livefpl_status.delay()
-		getgw.delay()
+# @periodic_task(run_every=timer,ignore_result=True)
+# def fplupdating():
+# 	url = 'http://fantasy.premierleague.com/fixtures/'
+# 	response = requests.get(url, headers=headers)
+# 	if len(response.history) != 0:
+# 		print "livefpl website is updating do nothing"
+# 		r.set('scrapmode', 'OFF')
+# 	else:
+# 		print "livefpl website is live, go scrap"
+# 		r.set('scrapmode', 'ON')
+# 		getgw.delay()
+# 		livefpl_status.delay()
+		
 
 @celery.task(ignore_result=True)
 def getgw():
@@ -91,8 +93,7 @@ def livefpl_status():
 	if "Live" in [str(td.string) for td in soup.find_all('td', {'class':'ismInProgress'})]:
 		r.set('livefpl_status','Live')
 	else:
-		#r.set('livefpl_status','Offline')
-		r.set('livefpl_status','Live')
+		r.set('livefpl_status','Offline')
 
 @periodic_task(run_every=timer, ignore_result=True)
 def get_fixture_ids():
@@ -119,8 +120,8 @@ def create_scrapper():
 
 @celery.task(ignore_result=True)
 def scrapper(fixture_id):
-	#url = 'http://0.0.0.0:5001/fixture/%s/'%fixture_id
-	url = 'http://fantasy.premierleague.com/fixture/%s/' %fixture_id
+	url = 'http://0.0.0.0:5001/fixture/%s/'%fixture_id
+	#url = 'http://fantasy.premierleague.com/fixture/%s/' %fixture_id
 	response = requests.get(url, headers=headers)
 	html = response.text
 	soup = BeautifulSoup(html)
@@ -133,7 +134,6 @@ def scrapper(fixture_id):
 			for ids in rdb.lrange('player_ids',0,-1):
 				if playername == rdb.hget(ids, 'web_name') and teamname == rdb.hget(ids, 'teamname'):
 					pid = ids
-			print "the id for %s is %s ( Scrapper ) "%(playername, pid)
 			if pid not in r.lrange('lineups:%s' %fixture_id, 0, -1):
 				r.rpush('lineups:%s' %fixture_id, pid)
 
@@ -210,6 +210,7 @@ def update_lineup_pts(dict_update, who):
 					for league in r.hgetall('team:%s:leagues'%team_id):
 						r.hincrby('team:%s:leagues'%team_id, league, incr)
 
+		print "renaming %s fresh > old"%pid
 		rp.rename('%s:fresh'%pid,'%s:old'%pid)
 	print "done Updating the %s teams in DB."%len(r.smembers('allteams'))
 
