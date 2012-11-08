@@ -31,6 +31,7 @@ def live():
 		for team in league_data:
 			team['totalpts'] = r.hget('team:%s:leagues'%team['id'], league_id)
 			team['lineup'] = r.lrange('team:%s:lineup'%team['id'],0,-5)
+
 		league_data = sorted(league_data, key=lambda k: k['totalpts'],reverse=True)
 	else:
 		league_data.append('None')
