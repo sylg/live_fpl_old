@@ -19,6 +19,7 @@ def getteams(leagueid):
 			print "Scrapping..."
 			for team in soup.find_all('tr'):
 
+
 				if team.find('a') == None:
 					continue
 				teamname = unicodedata.normalize('NFKD', team.find('a').string).encode('ascii','ignore')
