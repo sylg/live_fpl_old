@@ -156,8 +156,7 @@ $('#sound').click(function(){
 	else{
 		$(this).removeClass("icon-volume-off").addClass("icon-volume-up")
 		sound = true;
-	}
-		
+	}	
 });
 
 
@@ -165,7 +164,7 @@ $('#sound').click(function(){
 
 //Push update for ticker
 var pusher = new Pusher('b2c9525770d59267a6a2');
-	    var channel = pusher.subscribe('dev_ticker');
+	    var channel = pusher.subscribe('prod_ticker');
 	    channel.bind('ticker', function(data) {
 	    	tickerOverflow();
     		$(data.message).prependTo('#update').hide();

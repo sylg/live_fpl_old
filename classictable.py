@@ -19,7 +19,6 @@ def getteams(leagueid):
 			print "Scrapping..."
 			for team in soup.find_all('tr'):
 
-
 				if team.find('a') == None:
 					continue
 				teamname = unicodedata.normalize('NFKD', team.find('a').string).encode('ascii','ignore')
@@ -29,9 +28,6 @@ def getteams(leagueid):
 				r.sadd('league:%s'%leagueid, team_id)
 				r.sadd('allteams', team_id)
 				r.hset('league:%s:info'%leagueid, 'players', r.scard('league:%s'%leagueid))
-				if gw_pts != 0:
-					total_pts = total_pts - gw_pts
-					gw_pts = 0
 				r.hset('team:%s:leagues'%team_id,leagueid, total_pts)
 				if r.exists('team:%s'%team_id) == False:
 					r.hmset('team:%s' %team_id,{'id':team_id, 'totalpts':total_pts, 'gwpts':gw_pts, 'teamname':teamname,'scrapped_gwpts':gw_pts})
@@ -106,36 +102,42 @@ def add_data(teamid,current_gw):
 			if r.sismember('league:%s'%league, "toobig") == False:
 				for team in r.smembers('league:%s'%league):
 					getlineup(team,current_gw)
-					update_gwpts(team)
+					if r.get('currentgw') == r.get('newgw'):
+						# We are in the GW, update the new team with the new data
+						if r.hget('team:%s'%team, 'gwpts') != 0:
+							# If its the 2nd or 3rd day of the GW, reset totalpts in team and league hash and update teams totalpts.
+							gwpts = int(r.hget('team:%s'%team, 'gwpts'))
+							r.hincrby('team:%s'%team, 'totalpts', - gwpts)
+							print "total pts for %s is now %s"%(team, r.hget('team:%s'%team,'totalpts'))
+							r.hincrby('team:%s:leagues'%team,league, - gwpts )
+							print "total pts for %s in %s is now %s"%(team, league, r.hget('team:%s:leagues'%team,league))
+							r.hincrby('team:%s'%team,'gwpts', - gwpts )
+						update_gwpts(team)
+					else:
+						print "the GW hasn't started / Switched. Leaving the data from FPL"
+
+
 		else:
 			print "already exist"
 
 def update_gwpts(team):
-	#if int(r.hget('team:%s'%team, 'gwpts')) == int(r.hget('team:%s'%team, 'scrapped_gwpts')) and r.get('livefpl_status') == 'Live':
-	if int(r.hget('team:%s'%team, 'gwpts')) == int(r.hget('team:%s'%team, 'scrapped_gwpts')):
-		for players in r.lrange('team:%s:lineup'%team,0, -5):
-			if rp.exists('%s:old'%players):
-				if players != r.hget('team:%s'%team,'captain'):
-					print "%s is a player, updating gwpts by %s"%(players, rp.hget('%s:old'%players, 'TP'))
-					r.hincrby('team:%s'%team, 'gwpts', rp.hget('%s:old'%players, 'TP')) 
-				elif players == r.hget('team:%s'%team,'captain'):
-					print "%s is the captain, updating cappts by %s"%players, rp.hget('%s:old'%players, 'TP')
-					r.hincrby('team:%s'%team, 'cappts',  int(rp.hget('%s:old'%players, 'TP'))*2)
-					
-		print "updating point of %s | gwpts by Capts ( %s ) and totalpts by gwpts ( %s ) "%(team,r.hget('team:%s'%team, 'cappts'),r.hget('team:%s'%team, 'gwpts') )
-		r.hincrby('team:%s'%team, 'gwpts', int(r.hget('team:%s'%team, 'cappts')) )
-		print "Gwpts for team %s is now %s pts"%(team,r.hget('team:%s'%team, 'gwpts'))
-		r.hincrby('team:%s'%team, 'totalpts', int(r.hget('team:%s'%team, 'gwpts')) )
-		print "totalpts for team %s is now %s pts"%(team,r.hget('team:%s'%team, 'totalpts'))
-		for league in r.hgetall('team:%s:leagues'%team):
-			r.hincrby('team:%s:leagues'%team, league, r.hget('team:%s'%team, 'gwpts') )
-		print "finished update gwpts for team %s"%team
-	else:
-		if int(r.hget('team:%s'%team, 'gwpts')) != int(r.hget('team:%s'%team, 'scrapped_gwpts')):
-			print "the gwpts and scrapped_gwpts are different "
-		else:
-			print "not updating because livefpl_status:%s"%r.get('livefpl_status')
-
+	for players in r.lrange('team:%s:lineup'%team,0, -5):
+		if rp.exists('%s:old'%players):
+			if players != r.hget('team:%s'%team,'captain'):
+				print "%s is a player, updating gwpts by %s"%(players, rp.hget('%s:old'%players, 'TP'))
+				r.hincrby('team:%s'%team, 'gwpts', rp.hget('%s:old'%players, 'TP')) 
+			elif players == r.hget('team:%s'%team,'captain'):
+				print "%s is the captain, updating cappts by %s"%players, rp.hget('%s:old'%players, 'TP')
+				r.hincrby('team:%s'%team, 'cappts',  int(rp.hget('%s:old'%players, 'TP'))*2)
+				
+	print "updating point of %s | gwpts by Capts ( %s ) and totalpts by gwpts ( %s ) "%(team,r.hget('team:%s'%team, 'cappts'),r.hget('team:%s'%team, 'gwpts') )
+	r.hincrby('team:%s'%team, 'gwpts', int(r.hget('team:%s'%team, 'cappts')) )
+	print "Gwpts for team %s is now %s pts"%(team,r.hget('team:%s'%team, 'gwpts'))
+	r.hincrby('team:%s'%team, 'totalpts', int(r.hget('team:%s'%team, 'gwpts')) )
+	print "totalpts for team %s is now %s pts"%(team,r.hget('team:%s'%team, 'totalpts'))
+	for league in r.hgetall('team:%s:leagues'%team):
+		r.hincrby('team:%s:leagues'%team, league, r.hget('team:%s'%team, 'gwpts') )
+	print "finished update gwpts for team %s"%team
 
 
 
