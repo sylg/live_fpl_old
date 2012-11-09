@@ -43,6 +43,6 @@ headers = {'User-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.go
 
 #Period Task timer
 
-# timer = crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday,thursday')
+timer = crontab(minute='*', hour='10-22',day_of_week='saturday,sunday,monday,tuesday,wednesday,thursday')
 timerslow = timedelta(seconds=100)
-timer = timedelta(seconds=20)
+#timer = timedelta(seconds=20)
