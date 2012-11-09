@@ -23,7 +23,7 @@ def dict_diff(dict_a, dict_b):
 
 
 
-@periodic_task(run_every=crontab(minute='0',hour='11',day_of_week='sat'),ignore_result=True)
+@periodic_task(run_every=crontab(minute='0',hour='12',day_of_week='sat'),ignore_result=True)
 def cleandb():
 	r.flushdb()
 	rp.flushdb()
@@ -96,48 +96,9 @@ def fplupdating():
 		newgw = re.findall(r"\d{1,2}",str(soup.find('caption','ismStrongCaption').string))[0]
 		r.set('newgw',newgw)
 
-
-
-# @celery.task(ignore_result=True)
-# def getgw():
-# 	url = "http://fantasy.premierleague.com/"
-# 	br = mechanize.Browser()
-# 	br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
-# 	br.open(url)
-# 	br.select_form(nr=0)
-# 	br.form['email'] = "baboo2@yopmail.com"
-# 	br.form['password'] = "bibi2000"
-# 	br.submit()
-# 	html = br.back().read()
-# 	start = html.find('ismMegaLarge')
-# 	html = html[start+14:start+25]
-# 	currentgw = re.findall(r"\d{1,2}", html)[0]
-# 	r.set('currentgw',currentgw)
-
-# @celery.task(ignore_result=True)
-# def livefpl_status():
-# 	url = "http://fantasy.premierleague.com/"
-# 	br = mechanize.Browser()
-# 	br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
-# 	br.open(url)
-# 	br.select_form(nr=0)
-# 	br.form['email'] = "baboo2@yopmail.com"
-# 	br.form['password'] = "bibi2000"
-# 	br.submit()
-# 	html = br.back().read()
-	
-# 	start = html.find('<table class="ismTable ismEventStatus ismHomeMarginTop">')
-# 	stop =  html.find('<div class="ismHomeMarginTop">')
-# 	html = html[start:stop]
-# 	soup = BeautifulSoup(html)
-# 	if "Live" in [str(td.string) for td in soup.find_all('td', {'class':'ismInProgress'})]:
-# 		r.set('livefpl_status','Live')
-# 	else:
-# 		r.set('livefpl_status','Offline')
-
 @periodic_task(run_every=timer, ignore_result=True)
 def get_fixture_ids():
-	if r.get('scrapmode') == 'ON' and r.get('livefpl_status') == 'Live':
+	if r.get('scrapmode') == 'ON':
 		url = 'http://fantasy.premierleague.com/fixtures/'
 		response = requests.get(url, headers=headers)
 		html = response.text
