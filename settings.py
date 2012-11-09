@@ -22,7 +22,7 @@ ticker_channel = 'prod_ticker'
 ###########
 
 #Heroku
-# 
+
 redis_url =  os.getenv('OPENREDIS_URL', 'redis://localhost')
 r = redis.from_url(redis_url, db=0)
 rp = redis.from_url(redis_url, db=1)

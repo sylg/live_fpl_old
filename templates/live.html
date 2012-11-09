@@ -50,6 +50,10 @@
 </div>
 
 <div class="container-fluid">
+	<div class="alert">
+		<button type="button" class="close" data-dismiss="alert">×</button>
+		<strong>Warning!</strong> I just released some new features and some bug fix. Since there has been <strong>NO TESTS</strong> liveFPL might be super buggy and I am in London so no hotfix :(
+	</div>
 	<div class="span8">
 		<h4 id="{{ league_id }}">{{ leaguename }}</h4>
 		{% if league_data[0] != 'None'  %}
@@ -164,7 +168,7 @@ $('#sound').click(function(){
 
 //Push update for ticker
 var pusher = new Pusher('b2c9525770d59267a6a2');
-	    var channel = pusher.subscribe('prod_ticker');
+	    var channel = pusher.subscribe('dev_ticker');
 	    channel.bind('ticker', function(data) {
 	    	tickerOverflow();
     		$(data.message).prependTo('#update').hide();
