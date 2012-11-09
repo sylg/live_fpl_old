@@ -168,7 +168,7 @@ $('#sound').click(function(){
 
 //Push update for ticker
 var pusher = new Pusher('b2c9525770d59267a6a2');
-	    var channel = pusher.subscribe('dev_ticker');
+	    var channel = pusher.subscribe('prod_ticker');
 	    channel.bind('ticker', function(data) {
 	    	tickerOverflow();
     		$(data.message).prependTo('#update').hide();
@@ -204,41 +204,41 @@ window.setInterval(function(){
 // //Update league table
 var user_team = $('.my-team > td').html();
 
-// window.setInterval(function(){
+window.setInterval(function(){
 	
-// 	$.getJSON('/updateclassic?league_id='+$('h4').attr('id'), function(data) {
-// 		var cloned = $('#xtable').clone();
-// 		$.each(data, function(i, values){
-// 			var teamname = values['teamname'];
-// 			var gwpts = values['gwpts'];
-// 			var totalpts = values['totalpts'];
-// 			cloned.find('tbody tr').each(function(){
-// 					var tableTeamname = $('#teamname', this).html();
-// 					if (tableTeamname == teamname){
-// 						$('.gwpts', this).html(gwpts);
-// 						$('.totalpts', this).html(totalpts);
-// 					}
-// 			});
-// 		});
-// 		cloned.tablesorter({
-// 			sortList: [[2,1]]
-// 		 });
-// 		$('#xtable').rankingTableUpdate(cloned,{
-// 			animationSettings: {
-// 						        up: {
-// 						            left: -25,
-// 						            backgroundColor: '#CCFFCC'
-// 						        },
-// 						        down: {
-// 						            left: 25,
-// 						            backgroundColor: '#FFCCCC'
-// 						        },
-// 						    }
+	$.getJSON('/updateclassic?league_id='+$('h4').attr('id'), function(data) {
+		var cloned = $('#xtable').clone();
+		$.each(data, function(i, values){
+			var teamname = values['teamname'];
+			var gwpts = values['gwpts'];
+			var totalpts = values['totalpts'];
+			cloned.find('tbody tr').each(function(){
+					var tableTeamname = $('#teamname', this).html();
+					if (tableTeamname == teamname){
+						$('.gwpts', this).html(gwpts);
+						$('.totalpts', this).html(totalpts);
+					}
+			});
+		});
+		cloned.tablesorter({
+			sortList: [[2,1]]
+		 });
+		$('#xtable').rankingTableUpdate(cloned,{
+			animationSettings: {
+						        up: {
+						            left: -25,
+						            backgroundColor: '#CCFFCC'
+						        },
+						        down: {
+						            left: 25,
+						            backgroundColor: '#FFCCCC'
+						        },
+						    }
 
-// 		});
-// 		$('#xtable [rel=tooltip]').tooltip();
-// 	});
-// }, 10000);
+		});
+		$('#xtable [rel=tooltip]').tooltip();
+	});
+}, 30000);
 
 </script>
 </body>
