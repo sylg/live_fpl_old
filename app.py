@@ -15,8 +15,8 @@ app = Flask(__name__)
 def index():
 	return render_template("index.html")
 
-@app.route("/live", methods=['GET'])
-def live():
+@app.route("/classic", methods=['GET'])
+def classic():
 	league_id = str(request.args.get('league_id'))
 	team_id = str(request.args.get('team_id'))
 	leagues = []
@@ -38,7 +38,14 @@ def live():
 
 	leaguename = r.hget('league:%s:info'%league_id, 'leaguename')
 	teamname = r.hget('team:%s'%team_id, 'teamname')
-	return render_template("live.html",pushed_data=r.lrange('pushed_data',0,-1), league_data=league_data,currentgw=r.get('currentgw'), team_id=team_id,leagues=leagues, leaguename=leaguename,league_id=league_id, teamname=teamname)
+	return render_template("classic.html",pushed_data=r.lrange('pushed_data',0,-1), league_data=league_data,currentgw=r.get('currentgw'), team_id=team_id,leagues=leagues, leaguename=leaguename,league_id=league_id, teamname=teamname)
+
+
+@app.route("/h2h",methods=['GET'])
+def h2h():
+	league_id = str(request.args.get('league_id'))
+	team_id = str(request.args.get('team_id'))
+	return "This is a H2H league named %s (%s)"%(r.hget('league:%s:info'%league_id, 'leaguename'),league_id) 
 
 @app.route("/status",methods=['GET'])
 def status():

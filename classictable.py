@@ -70,7 +70,7 @@ def getlineup(teamid, gw):
 
 	
 
-def get_classic_leagues(teamid,current_gw):
+def get_leagues(teamid,current_gw):
 	url = "http://fantasy.premierleague.com/entry/%s/event-history/%s/" % (teamid, current_gw)
 	response = requests.get(url, headers=headers)
 	if response.status_code == 200:
@@ -78,9 +78,14 @@ def get_classic_leagues(teamid,current_gw):
 		html = response.text
 		tablestart = html.find('<h2 class="ismTableHeading">Classic leagues</h2>')
 		tableend = html.find('<h2 class="ismTableHeading">Head-to-Head leagues</h2>')
-		html = html[tablestart:tableend]
-		soup = BeautifulSoup(html)
+		html1 = html[tablestart:tableend]
+		soup = BeautifulSoup(html1)
+		tablestart2 = html.find('<h2 class="ismTableHeading">Head-to-Head leagues</h2>')
+		tableend2 = html.find('<h2 class="ismTableHeading">Global leagues</h2>')
+		html2 = html[tablestart2:tableend2]
+		soup2 = BeautifulSoup(html2)
 
+		#classic Leagues
 		for leagueid in soup.find_all('a'):
 			leaguename = unicodedata.normalize('NFKD',leagueid.get_text().strip()).encode('ascii','ignore')
 			leagueurl = leagueid.get('href')
@@ -89,13 +94,27 @@ def get_classic_leagues(teamid,current_gw):
 				r.hmset('league:%s:info'%league_id, {'leaguename': leaguename, 'type':'classic', 'id':league_id })
 			if league_id not in r.hgetall('team:%s:leagues'%teamid):
 				r.hset('team:%s:leagues'%teamid, league_id, 0)
+
+		#H2H Leagues
+		if len(soup2.find_all('a')) != 0:
+			for leagueid in soup2.find_all('a'):
+				leaguename = unicodedata.normalize('NFKD',leagueid.get_text().strip()).encode('ascii','ignore')
+				leagueurl = leagueid.get('href')
+				league_id = str(leagueurl.strip('/').split('/')[1])
+				if r.exists('league:%s:info'%league_id) == False:
+					r.hmset('league:%s:info'%league_id, {'leaguename': leaguename, 'type':'h2h', 'id':league_id })
+				if league_id not in r.hgetall('team:%s:leagues'%teamid):
+					r.hset('team:%s:leagues'%teamid, league_id, 0)
+		else:
+			print "team %s has no H2H leagues"%teamid
+
 	else:
 		print "Error got status code:%s" % response.status_code
 		print "retrying...for team: %s"%teamid
-		get_classic_leagues(teamid,current_gw)
+		get_leagues(teamid,current_gw)
 
 def add_data(teamid,current_gw):
-	get_classic_leagues(teamid, current_gw)
+	get_leagues(teamid, current_gw)
 	for league in r.hgetall('team:%s:leagues'%teamid):
 		if r.exists('league:%s'%league) == False:
 			getteams(league)
@@ -127,7 +146,7 @@ def update_gwpts(team):
 				print "%s is a player, updating gwpts by %s"%(players, rp.hget('%s:old'%players, 'TP'))
 				r.hincrby('team:%s'%team, 'gwpts', rp.hget('%s:old'%players, 'TP')) 
 			elif players == r.hget('team:%s'%team,'captain'):
-				print "%s is the captain, updating cappts by %s"%players, rp.hget('%s:old'%players, 'TP')
+				print "%s is the captain, updating cappts by %s"%(players, rp.hget('%s:old'%players, 'TP'))
 				r.hincrby('team:%s'%team, 'cappts',  int(rp.hget('%s:old'%players, 'TP'))*2)
 				
 	print "updating point of %s | gwpts by Capts ( %s ) and totalpts by gwpts ( %s ) "%(team,r.hget('team:%s'%team, 'cappts'),r.hget('team:%s'%team, 'gwpts') )

@@ -9,7 +9,7 @@ from settings import *
 import re
 import mechanize
 
-celery = Celery('tasks', broker=redis_url, backend=redis_url)
+celery = Celery('tasks', broker=redis_celery_url, backend=redis_celery_url)
 
 def dict_diff(dict_a, dict_b):
     return dict([
@@ -108,7 +108,7 @@ def get_fixture_ids():
 		soup = BeautifulSoup(html)
 		for row in soup.find_all('tr', 'ismFixtureSummary'):
 			fixture_id = row.find('a', text="Detailed stats")['data-id']
-			if fixture_id not in r.lrange('fixture_ids',0,-1):
+			if fixture_id not in r.lrange('fixture_ids',0,-1) and fixture_id not in r.lrange('fixture_finished',0,-1):
 				r.lpush('fixture_ids', fixture_id)
 
 
@@ -116,7 +116,15 @@ def get_fixture_ids():
 def create_scrapper():
 	if r.llen('fixture_ids') != 0 and r.get('livefpl_status') == 'Live':
 		for ids in r.lrange('fixture_ids',0, -1):
-			scrapper.delay(ids)
+			if not rp.exists('counter:%s'%ids):
+				rp.set('counter:%s'%ids,0)
+
+			if int(rp.get('counter:%s'%ids)) <= 20:
+				scrapper.delay(ids)
+			else:
+				print "fixture %s is finished, removing it from the list."%ids
+				r.lrem('fixture_ids',ids)
+				r.lpush('fixture_finished',ids)
 
 @celery.task(ignore_result=True)
 def scrapper(fixture_id):
@@ -134,8 +142,8 @@ def scrapper(fixture_id):
 			for ids in rdb.lrange('player_ids',0,-1):
 				if playername == rdb.hget(ids, 'web_name') and teamname == rdb.hget(ids, 'teamname'):
 					pid = ids
-			if pid not in r.lrange('lineups:%s' %fixture_id, 0, -1):
-				r.rpush('lineups:%s' %fixture_id, pid)
+			if pid not in rp.lrange('lineups:%s' %fixture_id, 0, -1):
+				rp.rpush('lineups:%s' %fixture_id, pid)
 
 
 
@@ -147,26 +155,57 @@ def scrapper(fixture_id):
 				rp.hset('%s:fresh'%pid, key, int(players.find_all('td')[i].string.strip()))
 				i += 1
 
+	#Getting the current playtime
+	mp_pool = []
+	old_mp = None
+	for pid in rp.lrange('lineups:%s'%fixture_id, 0, -1):
+		mp = rp.hget('%s:fresh'%pid,'MP')
+		mp_pool.append(mp)
+
+	if rp.exists('current_mp:%s'%fixture_id):
+		current_mp = rp.get('current_mp:%s'%fixture_id)
+		old_mp = current_mp
+	else:
+		current_mp = None
+	for mp in mp_pool:
+		if mp > current_mp:
+			current_mp = mp
+	rp.set('current_mp:%s'%fixture_id,current_mp)
+	print "the current MP is %s"%current_mp
+
+	#checking if the fixture is finished
+	if old_mp == current_mp:
+		r.incr('counter:%s'%fixture_id)
+	
+
+
 	#Begin Differential between Scrap & push
 	diff_update = {}
 	scrapped_data = {}
-	for pid in r.lrange('lineups:%s' %fixture_id, 0, -1):
-		if rp.hexists('%s:old'%pid, 'MP'):
+	for pid in rp.lrange('lineups:%s'%fixture_id, 0, -1):
+		if rp.exists('%s:old'%pid):
 			old = rp.hgetall('%s:old'%pid)
 			fresh = rp.hgetall('%s:fresh'%pid)
 			dictdiff = dict_diff(old,fresh)
 			if dictdiff:
 				diff_update[pid] = dictdiff
-				dictdiff['playername'] =rdb.hget(pid,'web_name')
-				push_data(pid,dictdiff)
+				dictdiff['playername'] = rdb.hget(pid,'web_name')
+				push_data(pid,dictdiff,current_mp)
 		else:
 			scrapped_data[pid] = rp.hgetall('%s:fresh'%pid)
+			scrapped_data[pid]['playername'] = rdb.hget(pid,'web_name')
 
 
 
 	if diff_update:
 		update_lineup_pts.delay(diff_update, "diff_update")
 	if scrapped_data:
+		print "lenght is %s"%len(scrapped_data)
+		if len(scrapped_data) <= 6:
+			print "checking if substitution happened..."
+			player_change(scrapped_data,fixture_id,old_mp,current_mp)
+
+
 		update_lineup_pts.delay(scrapped_data, "1st scrap")
 
 @celery.task(ignore_result=True)
@@ -180,6 +219,7 @@ def update_lineup_pts(dict_update, who):
 	print "This is the dict from %s"%who
 	print dict_update
 	for pid in dict_update:
+		print "working on %s"%pid
 		if 'TP' in dict_update[pid]:
 			for team_id in r.smembers('allteams'):
 				old_gwpts = int(r.hget('team:%s'%team_id, 'gwpts'))
@@ -209,7 +249,13 @@ def update_lineup_pts(dict_update, who):
 					r.hincrby('team:%s'%team_id,'totalpts', incr)
 					for league in r.hgetall('team:%s:leagues'%team_id):
 						r.hincrby('team:%s:leagues'%team_id, league, incr)
-
+		print "checking if the 2 diff still exists"
+		print "fresh = %s"%rp.exists('%s:fresh'%pid)
+		print "old = %s"%rp.exists('%s:old'%pid)
 		print "renaming %s fresh > old"%pid
 		rp.rename('%s:fresh'%pid,'%s:old'%pid)
+
+
+
+
 	print "done Updating the %s teams in DB."%len(r.smembers('allteams'))

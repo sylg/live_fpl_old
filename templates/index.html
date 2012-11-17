@@ -77,7 +77,7 @@ $('#live').submit(function(){
                         $('#league-no').append('<li><a href="#">'+val.leaguename+'</a></li>')
                     }
                     else {
-                        $('#league-yes').append('<li><a href="/live?league_id='+i+'&team_id='+team_id+'">'+val.leaguename+'</a></li>');
+                        $('#league-yes').append('<li><a href="/classic?league_id='+i+'&team_id='+team_id+'">'+val.leaguename+'</a></li>');
                     }
                 }); 
             }
@@ -97,7 +97,12 @@ $('#live').submit(function(){
                         notsupprted ++;
                     }
                     else {
-                        $('#league-yes').append('<li><a href="/live?league_id='+i+'&team_id='+team_id+'">'+val.leaguename+'</a></li>');
+                        if (val.type == "classic"){
+                          $('#league-yes').append('<li><a href="/classic?league_id='+i+'&team_id='+team_id+'">'+val.leaguename+'</a></li>');
+                        }
+                        else {
+                          $('#league-yes').append('<li><a href="/h2h?league_id='+i+'&team_id='+team_id+'">'+val.leaguename+' (H2H League not yet supported)</a></li>');
+                        }
                     }
                 });
                 if ( notsupprted > 0) {
